@@ -24,10 +24,13 @@ If you don't want to do the installation, I've provided a release that has all t
 
 In order to get up and running, you'll need create a discord bot, and get the token. Edit the `gameboy.js` file and where it says `bot.login("your token here");` on line 8, just put your discord token inside the quotes. 
 You can then fire up the bot with `node gameboy.js`, but I'd recommend using pm2 just in case it does crash (very rare). 
+Then get the list of commands and controls with `gameboy help` in a discord chat
+Also make sure that the bot is an admin when invited, it still doesn't have checking when it checks for channels if it can post there. 
 
 # Extra
 Yes this bot's code isn't perfect, there is some repeated code that I could clean up, but it works fine.
 There is **no** sound. The audio data that the emulator spits out uses a different library that just doesn't work with node.js and only works with browsers and flash. It also uses float32 arrays and not buffers, so you'd need to rewrite a lot of the sound code to make it work. Also in game saves don't work, cause SRAM saving doesn't work yet, but save states exist so it's not a big problem. 
+
 
 # Thanks to
 - rauchg, which made the gameboy package work with node.js, without that package, this bot would never exist
