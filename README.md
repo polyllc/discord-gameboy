@@ -22,16 +22,16 @@ Note: there is a problem with installing canvas when installing the gameboy pack
 Also another problem is that it sometimes says `this.opts.overrideMbc is not defined`. In order to fix this, you'll need to replace every instance of `this.opts.overrideMbc` in `index.js` from the gameboy package **except** the first one (where it says: `this.opts.overrideMbc = !!opts.overrideMbc;`, don't replace this one) with `false`. It's false by default, and you don't need to change it to true, and this bot doesn't require that it be true. You could probably remove the `!!` to make it work, but replacing it also works and it's the way I got it to work fine. 
 If you don't want to do the installation, I've provided a release that has all the node_modules and the folders ready for use. But if you don't trust me, I'd recommend installing yourself. 
 
-In order to get up and running, you'll need create a discord bot, and get the token. Edit the `gameboy.js` file and where it says `bot.login("your token here");` on line 8, just put your discord token inside the quotes. 
-You can then fire up the bot with `node gameboy.js`, but I'd recommend using pm2 just in case it does crash (very rare). 
-Then get the list of commands and controls with `gameboy help` in a discord chat
-Also make sure that the bot is an admin when invited, it still doesn't have checking when it checks for channels if it can post there. 
+In order to get up and running, you'll need create a discord bot, and get the token. Edit the `gameboy.js` file and where it says `bot.login("your token here");` on line 8, just put your discord token inside the quotes.  
+You can then fire up the bot with `node gameboy.js`, but I'd recommend using pm2 just in case it does crash (very rare).  
+Then get the list of commands and controls with `gameboy help` in a discord chat  
+Also make sure that the bot is an admin when invited, it still doesn't have checking when it checks for channels if it can post there.   
 
 # Extra
-Yes this bot's code isn't perfect, there is some repeated code that I could clean up, but it works fine.
+Yes this bot's code isn't perfect, there is some repeated code that I could clean up, but it works fine.  
 There is **no** sound. The audio data that the emulator spits out uses a different library that just doesn't work with node.js and only works with browsers and flash. It also uses float32 arrays and not buffers, so you'd need to rewrite a lot of the sound code to make it work. Also in game saves don't work, cause SRAM saving doesn't work yet, but save states exist so it's not a big problem. 
 
-![The bot after it's initialized, in Personal mode](https://cdn.discordapp.com/attachments/439588116337000488/745420790530572288/unknown.png)
+![The bot after it's initialized, in Personal mode](https://cdn.discordapp.com/attachments/439588116337000488/745420790530572288/unknown.png)  
 The bot after it's initialized, in Personal mode
 
 # Thanks to
