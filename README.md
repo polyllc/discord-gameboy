@@ -31,6 +31,8 @@ Also make sure that the bot is an admin when invited, it still doesn't have chec
 Yes this bot's code isn't perfect, there is some repeated code that I could clean up, but it works fine.
 There is **no** sound. The audio data that the emulator spits out uses a different library that just doesn't work with node.js and only works with browsers and flash. It also uses float32 arrays and not buffers, so you'd need to rewrite a lot of the sound code to make it work. Also in game saves don't work, cause SRAM saving doesn't work yet, but save states exist so it's not a big problem. 
 
+![The bot after it's initialized, in Personal mode](https://cdn.discordapp.com/attachments/439588116337000488/745420790530572288/unknown.png)
+The bot after it's initialized, in Personal mode
 
 # Thanks to
 - rauchg, which made the gameboy package work with node.js, without that package, this bot would never exist
