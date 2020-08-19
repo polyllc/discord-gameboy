@@ -100,7 +100,7 @@ async function sendImage(se, type = "gif"){ //i know, i should be using an enum
 
 function saveSRAM(message, se){ //saves the sram to a file, currently, restoring the sram does not work, but it's not that important as save states do
 	if (GameBoyEmulatorInitialized(se) && GameBoyEmulatorPlaying(se)) {
-		fs.writeFile("saves/" + (se.mode == 3 ? "u" : "g") + se.id + "sram_" + se.romname, JSON.stringify(se.gb.saveSRAMState()).substr(1, JSON.stringify(se.gb.saveSRAMState()).length-2), function(err){
+		fs.writeFile("saves/" + se.id + "sram_" + se.romname, JSON.stringify(se.gb.saveSRAMState()).substr(1, JSON.stringify(se.gb.saveSRAMState()).length-2), function(err){
 		if(message){
 			message.channel.send("Saved SRAM data");
 		}
@@ -113,7 +113,7 @@ function saveSRAM(message, se){ //saves the sram to a file, currently, restoring
 
 function save(message, se){ //save the state that the emulator is in
 	if (GameBoyEmulatorInitialized(se) && GameBoyEmulatorPlaying(se)) {
-		fs.writeFile("saves/" + (se.mode == 3 ? "u" : "g") + se.id + "save_" + se.romname, JSON.stringify(se.gb.saveState()).substr(1, JSON.stringify(se.gb.saveState()).length-2), function(err){
+		fs.writeFile("saves/" + se.id + "save_" + se.romname, JSON.stringify(se.gb.saveState()).substr(1, JSON.stringify(se.gb.saveState()).length-2), function(err){
 		if(message){
 			message.channel.send("Saved data");
 		}
@@ -390,7 +390,7 @@ bot.on('messageReactionAdd', async (reaction, user) => {
 bot.on('message', async message =>{
 
 	if(message.content.toLowerCase().startsWith("gameboy help")){
-		message.channel.send("Controls:\nA - a\nB - b\nSTART - start\nSELECT - select\nDpad Up - u\nDpad Down - d\nDpad Left - l\nDpad Right - r\n\nCommands:\nload rom {rom file uploaded} - loads the uploaded rom\nsave - saves emulator state\nload - loads previous saved state\nreset - resets emulation\nstop - stops emulation\nchange display type - changes whether to use images or gifs for frames\nchange gif length - the length of how long gifs should be grabbing frames\nchange gif rate - the rate at which gifs are naturally sent");
+		message.channel.send("Controls:\nA - a\nB - b\nSTART - start\nSELECT - select\nDpad Up - u\nDpad Down - d\nDpad Left - l\nDpad Right - r\n\nCommands:\nload rom {rom file uploaded} - loads the uploaded rom\nsave - saves emulator state\nload - loads previous saved state\nreset - resets emulation\nstop - stops emulation\nchange display type - changes whether to use images or gifs for frames\nchange gif length - the length of how long gifs should be grabbing frames\nchange gif rate - the rate at which gifs are naturally sent\ng - update gif now\nf - update frame now");
 	}
 
 	var serverEmu = serverList.get("g" + message.guild.id);
@@ -520,7 +520,7 @@ bot.on('message', async message =>{
 				if(matchKey(command) != -1){
 					if(GameBoyEmulatorInitialized(serverEmu) && GameBoyEmulatorPlaying(serverEmu)){
 						GameBoyKeyDown(command, serverEmu);
-						sendImage(serverEmu, se.imgOrGif);
+						sendImage(serverEmu, serverEmu.imgOrGif);
 						message.delete();
 						setTimeout(function(){
 							GameBoyKeyUp(command, serverEmu);
@@ -603,7 +603,7 @@ function openSRAM(filename, canvas, message, se) {
 
 function openState(filename, canvas, message, se) {
 	try {
-		if (fs.existsSync("saves/" + se.id + "save_" + romname)) {
+		if (fs.existsSync("saves/" + se.id + "save_" + se.romname)) {
 			try {
 				clearLastEmulation(se);
 				se.gb = new gameboy(se.canvas, se.dat); 
@@ -625,8 +625,8 @@ function openState(filename, canvas, message, se) {
 	}
 }
 
-function reset(message){
-if (GameBoyEmulatorInitialized()) {
+function reset(message, se){
+if (GameBoyEmulatorInitialized(se)) {
     try {
 		start(se);
 		message.channel.send("Reset Emulation");
