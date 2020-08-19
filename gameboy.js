@@ -253,8 +253,8 @@ function startGame(message, rom, romname){ //starts the game in one of 3 modes
 											imgOrGif: "gif",
 											uid: message.author.id
 										}
-										serverList.set("u" + message.guild.id, emuCon);
-										var serverEmu = serverList.get("u" + message.guild.id);
+										serverList.set("u" + message.author.id, emuCon);
+										var serverEmu = serverList.get("u" + message.author.id);
 										start(serverEmu);
 										setTimeout(async function(){
 												serverEmu.mainmess = await message.channel.send("game");
@@ -297,7 +297,7 @@ function startGame(message, rom, romname){ //starts the game in one of 3 modes
 
 bot.on('messageReactionRemove', (reaction, user) => {
 	var se = serverList.get("g" + reaction.message.guild.id);
-	if(!serverEmu){
+	if(!se){
 		se = serverList.get("u" + user.id);
 	}
 	if(se){	
@@ -346,7 +346,7 @@ bot.on('messageReactionAdd', async (reaction, user) => {
 		}
 	}
 	var se = serverList.get("g" + reaction.message.guild.id);
-	if(!serverEmu){
+	if(!se){
 		se = serverList.get("u" + user.id);
 	}
 	if(se){	
