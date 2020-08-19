@@ -246,7 +246,7 @@ function startGame(message, rom, romname){ //starts the game in one of 3 modes
 											chid: message.channel.id, //channel id, for getting input
 											gid: bot.channels.cache.get(messages.first().content), //channel id for posting gifs
 											dat: rom, //rom data
-											mode: 2,
+											mode: 3,
 											cid: message.author.id, //controller id
 											gifLen: 650,
 											gifRate: 10000,
