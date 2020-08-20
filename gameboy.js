@@ -160,12 +160,7 @@ function startGame(message, rom, romname){ //starts the game in one of 3 modes
 							var serverEmu = serverList.get("g" + message.guild.id);
 							start(serverEmu);
 							setTimeout(async function(){
-								if(imagelink == ""){
 									serverEmu.mainmess = await message.channel.send("game");
-								}
-								else{
-									serverEmu.mainmess = await message.channel.send("game");
-								}
 							}, 100);
 							break;
 
