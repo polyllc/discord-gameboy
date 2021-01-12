@@ -1,0 +1,26 @@
+{
+  "name": "discord-gameboy",
+  "version": "1.0.1",
+  "description": "An emulator that uses discord as its method of input and output. It spits out frames to discord, and recieves input from discord.\r It supports:\r - Unique save states\r - Multiple emulators in one instance of a bot, one per user and one per guild\r - Custom ROMs\r - gifs\r - 3 modes of operation, community, hybrid, personal\r   - Community: Allows anyone to control the emulator with messages\r   - Hybrid: Allows anyone to control the emulator with messages, you can control with reactions\r   - Personal: Only you can control the emulator\r - Controlling through reactions or through messages",
+  "main": "gameboy.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paulohgodinho/discord-gameboy.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/paulohgodinho/discord-gameboy/issues"
+  },
+  "homepage": "https://github.com/paulohgodinho/discord-gameboy#readme",
+  "dependencies": {
+    "canvas": "^2.6.1",
+    "discord.js": "^12.5.1",
+    "gifencoder": "^2.0.1",
+    "request": "^2.88.2",
+    "gameboy": "git+https://github.com/paulohgodinho/gameboy.git"
+  }
+}
