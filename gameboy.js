@@ -1,3 +1,4 @@
+require('dotenv').config()
 const Discord = require("discord.js");
 const gameboy = require("gameboy");
 const { createCanvas, loadImage } = require('canvas')
@@ -5,7 +6,8 @@ var GIFEncoder = require('gifencoder');
 const bot = new Discord.Client();
 const fs = require("fs");
 const request = require('request');
-bot.login("your token here");
+bot.login(process.env.DISCORD_TOKEN);
+
 
 var canvas;
 var serverList = new Map(); //creates a map that will hold all the data for each emulator instance
@@ -71,8 +73,8 @@ async function sendImage(se, type = "gif"){ //i know, i should be using an enum
 			if(se.frames != 0 && se.mainmess != null){
 				var channel = se.mainmess.channel;
 				se.makeGif = false;
-				if(se.mode == 1){ //replaces
-					se.mainmess.delete(); 
+				if(se.mode == 1){ 
+					se.mainmess.delete();
 					se.mainmess = await channel.send({files: [{attachment: "img/" + se.id + "img.gif"}]});
 				}
 				else{ //edits
@@ -317,7 +319,7 @@ bot.on('messageReactionRemove', (reaction, user) => {
 				if(reaction._emoji.name == "🅱️"){
 					key = "b";
 				}
-				if(reaction._emoji.name == "start"){
+				if(reaction._emoji.name == "start" || reaction._emoji.name == "👍"){
 					key = "start";
 				}
 				if(reaction._emoji.name == "select"){
@@ -329,6 +331,10 @@ bot.on('messageReactionRemove', (reaction, user) => {
 			}
 		}
 	}
+});
+
+bot.on('ready', () => {
+	console.info(`Logged in as ${bot.user.tag}!`);
 });
 
 bot.on('messageReactionAdd', async (reaction, user) => {
@@ -366,7 +372,8 @@ bot.on('messageReactionAdd', async (reaction, user) => {
 				if(reaction._emoji.name == "🅱️"){
 					key = "b";
 				}
-				if(reaction._emoji.name == "start"){
+				if(reaction._emoji.name == "start" || reaction.emoji.name == "👍"){
+					console.log("pressed start");
 					key = "start";
 				}
 				if(reaction._emoji.name == "select"){
@@ -411,6 +418,20 @@ bot.on('message', async message =>{
 			}
 			else{
 				message.reply("upload a rom too");
+			}
+		} else if (message.content == "load test rom"){
+			let debugMode = process.env.DEBUG_MODE
+			
+			if (!debugMode){
+				message.reply("not in debug mode");
+				return;
+			}
+			try{
+				let romPath = process.env.TEST_ROM_PATH
+				startGame(message, fs.readFileSync(romPath), "test rom");
+			} catch(err){
+				console.log(err)
+				message.reply("could not load test rom");
 			}
 		}
 	}
