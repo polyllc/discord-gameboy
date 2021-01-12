@@ -13,8 +13,11 @@ var canvas;
 var serverList = new Map(); //creates a map that will hold all the data for each emulator instance
 var serverEmu = 1;
 
+var canvasWidth = 144;
+var canvasHeight = 160;
+
 function start(se) { //starting and restarting the emulator
-	se.canvas = createCanvas(144, 160);
+	se.canvas = createCanvas(canvasWidth, canvasHeight);
 	se.ctx = se.canvas.getContext('2d');
 	clearLastEmulation(se);
 	se.gb = new gameboy(se.canvas, se.dat); 
@@ -60,7 +63,7 @@ async function run(se){
 
 async function sendImage(se, type = "gif"){ //i know, i should be using an enum
 	if(!se.makeGif && type == "gif"){ //checks if its not already creating a gif, so it doesn't overlap
-		se.gif = new GIFEncoder(144, 160);
+		se.gif = new GIFEncoder(canvasWidth, canvasHeight);
 		se.gif.createReadStream().pipe(fs.createWriteStream('img/' + se.id  + 'img.gif'));
 		se.gif.start();
 		se.gif.setRepeat(-1);
@@ -139,7 +142,7 @@ function startGame(message, rom, romname){ //starts the game in one of 3 modes
 							case 1: message.channel.send("Starting game in Community mode... this takes about 3 seconds to process the first 100 frames");
 							var emuCon = {
 								gb: null, //the gameboy instance
-								canvas: createCanvas(144,160), //the canvas for the gameboy
+								canvas: createCanvas(canvasWidth,canvasHeight), //the canvas for the gameboy
 								ctx: null, //the ctx needed for gif creation
 								int: null, // the interval for frams
 								ctxint: null, //the interval for the ctx for the gifs
@@ -175,7 +178,7 @@ function startGame(message, rom, romname){ //starts the game in one of 3 modes
 										message.channel.send("Starting game in Hybrid mode... this takes about 3 seconds to process the first 100 frames");
 										var emuCon = {
 											gb: null,
-											canvas: createCanvas(144,160),
+											canvas: createCanvas(canvasWidth,canvasHeight),
 											ctx: null,
 											int: null,
 											ctxint: null,
@@ -229,7 +232,7 @@ function startGame(message, rom, romname){ //starts the game in one of 3 modes
 										message.channel.send("Starting game in Personal mode... this takes about 3 seconds to process the first 100 frames");
 										var emuCon = {
 											gb: null,
-											canvas: createCanvas(144,160),
+											canvas: createCanvas(canvasWidth,canvasHeight),
 											ctx: null,
 											int: null,
 											ctxint: null,
@@ -544,6 +547,15 @@ bot.on('message', async message =>{
 					}
 					else{
 						message.channel.send("The emulator isn't running");
+					}
+				}
+				if(command.startsWith("SET SIZE"))
+				{
+					var splitted = command.split(' ');
+					if(splitted.length == 4)
+					{
+						canvasWidth = parseInt(splitted[2]);
+						canvasHeight = parseInt(splitted[3]);
 					}
 				}
 			}
