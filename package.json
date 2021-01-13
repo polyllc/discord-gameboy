@@ -5,6 +5,7 @@
   "main": "gameboy.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+    
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
     "dotenv": "^8.2.0",
     "gameboy": "git+https://github.com/paulohgodinho/gameboy.git",
     "gifencoder": "^2.0.1",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "typescript": "^4.1.3"
   }
 }
