@@ -3,10 +3,8 @@ const Discord = require("discord.js");
 const gameboy = require("gameboy");
 const { createCanvas, loadImage } = require('canvas')
 var GIFEncoder = require('gifencoder');
-const bot = new Discord.Client();
 const fs = require("fs");
 const request = require('request');
-bot.login(process.env.DISCORD_TOKEN);
 
 
 var canvas;
@@ -15,6 +13,24 @@ var serverEmu = 1;
 
 var canvasWidth = 144;
 var canvasHeight = 160;
+
+const IMG_PATH = '';
+const SAVES_PATH = '';
+const GAMES_PATH = '';
+
+const checkCacheFolders = () => {
+	const folders = [IMG_PATH, SAVES_PATH, GAMES_PATH]
+	folders.forEach((path) => {
+		if (!fs.existsSync(path)) {
+			fs.mkdirSync(path);
+		}
+	})
+}
+
+checkCacheFolders();
+const bot = new Discord.Client();
+bot.login(process.env.DISCORD_TOKEN);
+
 
 function start(se) { //starting and restarting the emulator
 	se.canvas = createCanvas(canvasWidth, canvasHeight);
@@ -39,7 +55,7 @@ async function run(se){
 			}, 4);
 			se.ctxint = setInterval(function(){ //the interval for saving the images to a gif or saving an image to disk, setting the interval speed could improve or degrade performance
 				var base64Data = se.canvas.toDataURL().replace(/^data:image\/png;base64,/, "");
-				fs.writeFile("img/" + se.id + "img.png", base64Data, 'base64', function(err) {
+				fs.writeFile(IMG_PATH + se.id + "img.png", base64Data, 'base64', function(err) {
 
 				});
 				if(se.makeGif){
@@ -78,10 +94,10 @@ async function sendImage(se, type = "gif"){ //i know, i should be using an enum
 				se.makeGif = false;
 				if(se.mode == 1){ 
 					se.mainmess.delete();
-					se.mainmess = await channel.send({files: [{attachment: "img/" + se.id + "img.gif"}]});
+					se.mainmess = await channel.send({files: [{attachment: IMG_PATH + se.id + "img.gif"}]});
 				}
 				else{ //edits
-					var pid = await se.gid.send({files: [{attachment: "img/" + se.id + "img.gif"}]}); 
+					var pid = await se.gid.send({files: [{attachment: IMG_PATH + se.id + "img.gif"}]}); 
 					se.mainmess.edit(pid.attachments.first().url);
 				}
 			}
@@ -93,10 +109,10 @@ async function sendImage(se, type = "gif"){ //i know, i should be using an enum
 	else if(type == "img"){
 		if(se.mode == 1){
 			se.mainmess.delete();
-			se.mainmess = await channel.send({files: [{attachment: "img/" + se.id + "img.png"}]});
+			se.mainmess = await channel.send({files: [{attachment: IMG_PATH + se.id + "img.png"}]});
 		}
 		else{
-			var pid = await se.gid.send({files: [{attachment: "img/" + se.id + "img.png"}]});
+			var pid = await se.gid.send({files: [{attachment: IMG_PATH + se.id + "img.png"}]});
 			se.mainmess.edit(pid.attachments.first().url);
 		}
 	}
@@ -105,7 +121,7 @@ async function sendImage(se, type = "gif"){ //i know, i should be using an enum
 
 function saveSRAM(message, se){ //saves the sram to a file, currently, restoring the sram does not work, but it's not that important as save states do
 	if (GameBoyEmulatorInitialized(se) && GameBoyEmulatorPlaying(se)) {
-		fs.writeFile("saves/" + se.id + "sram_" + se.romname, JSON.stringify(se.gb.saveSRAMState()).substr(1, JSON.stringify(se.gb.saveSRAMState()).length-2), function(err){
+		fs.writeFile(SAVES_PATH + se.id + "sram_" + se.romname, JSON.stringify(se.gb.saveSRAMState()).substr(1, JSON.stringify(se.gb.saveSRAMState()).length-2), function(err){
 		if(message){
 			message.channel.send("Saved SRAM data");
 		}
@@ -118,7 +134,7 @@ function saveSRAM(message, se){ //saves the sram to a file, currently, restoring
 
 function save(message, se){ //save the state that the emulator is in
 	if (GameBoyEmulatorInitialized(se) && GameBoyEmulatorPlaying(se)) {
-		fs.writeFile("saves/" + se.id + "save_" + se.romname, JSON.stringify(se.gb.saveState()).substr(1, JSON.stringify(se.gb.saveState()).length-2), function(err){
+		fs.writeFile(SAVES_PATH + se.id + "save_" + se.romname, JSON.stringify(se.gb.saveState()).substr(1, JSON.stringify(se.gb.saveState()).length-2), function(err){
 		if(message){
 			message.channel.send("Saved data");
 		}
@@ -412,7 +428,7 @@ bot.on('message', async message =>{
 					.on('error', console.error)
 					.pipe(fs.createWriteStream('games/' + message.attachments.first().name))
 						setTimeout(function(){ //just to make sure that the file actually was downloaded
-							startGame(message, fs.readFileSync("games/" + message.attachments.first().name), message.attachments.first().name);
+							startGame(message, fs.readFileSync(GAMES_PATH + message.attachments.first().name), message.attachments.first().name);
 						},2000); 
 					}
 					else{
@@ -521,7 +537,7 @@ bot.on('message', async message =>{
 					message.delete();
 				}
 				if(command == "load sram"){
-					openSRAM("saves/" + (serverEmu.mode == 3 ? "u" : "g") + serverEmu.id + "save_" + romname, canvas, message, serverEmu);
+					openSRAM(SAVES_PATH + (serverEmu.mode == 3 ? "u" : "g") + serverEmu.id + "save_" + romname, canvas, message, serverEmu);
 					message.delete();
 				}
 				if(command == "save"){
@@ -613,7 +629,7 @@ function openSRAM(filename, canvas, message, se) {
 		if (fs.existsSync(filename)) {
 			try {
 				//this actually doesn't work, but I'll prentend like i didn't hear that
-				se.gb.MBCRam = se.gb.toTypedArray(twodSplit(fs.readFileSync("saves/" + (se.mode == 3 ? "u" : "g") + se.id + "sram_" + se.romname, {encoding: "utf8"})), "uint8");
+				se.gb.MBCRam = se.gb.toTypedArray(twodSplit(fs.readFileSync(SAVES_PATH + (se.mode == 3 ? "u" : "g") + se.id + "sram_" + se.romname, {encoding: "utf8"})), "uint8");
 				message.channel.send("Restored SRAM data");
 			}
 			catch (error) {
@@ -631,11 +647,11 @@ function openSRAM(filename, canvas, message, se) {
 
 function openState(filename, canvas, message, se) {
 	try {
-		if (fs.existsSync("saves/" + se.id + "save_" + se.romname)) {
+		if (fs.existsSync(SAVES_PATH + se.id + "save_" + se.romname)) {
 			try {
 				clearLastEmulation(se);
 				se.gb = new gameboy(se.canvas, se.dat); 
-				se.gb.returnFromState(twodSplit(fs.readFileSync("saves/" + se.id + "save_" + se.romname, {encoding: "ascii"}))); //the save state loading
+				se.gb.returnFromState(twodSplit(fs.readFileSync(SAVES_PATH + se.id + "save_" + se.romname, {encoding: "ascii"}))); //the save state loading
 				//gb.start();
 				run(se);
 				message.channel.send("Restored save point data");
