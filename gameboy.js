@@ -13,7 +13,35 @@ var canvas;
 var serverList = new Map(); //creates a map that will hold all the data for each emulator instance
 var serverEmu = 1;
 
-const ModeEnum = Object.freeze({"community":1, "hybrid":2, "personal":3, "continuous":4});
+const ModeEnum = Object.freeze({"delete":1, "continuous":2, "edit": 3});
+
+//TODO make this a class
+function createEmulator(mode, romname, rom, guildId, channelId, userId = 0)
+{
+	const emuCon = {
+		gb: null, //the gameboy instance
+		canvas: createCanvas(144,160), //the canvas for the gameboy
+		ctx: null, //the ctx needed for gif creation
+		int: null, // the interval for frams
+		ctxint: null, //the interval for the ctx for the gifs
+		gifint: null, //the interval to create gifs (just so if no one is pressing any buttons, the game at least sometimes spits out frames to discored)
+		frames: 0, //the amount of frames created, only needed for error handling
+		mainmess: null, //the main message that the bot creates for the emulation, kinda like the container for the emulation in the form of the message
+		makeGif: false, //should it be making a gif?
+		gif: null, //the gif object would be here
+		romname: romname, //the name of the rom, the file name too
+		id: "g" + guildId, //the key of the map, used to uniquely identify saves 
+		chid: channelId, //the channel id to check for new commands
+		dat: rom, //the data of the rom
+		mode: mode, //the mode that was selected, community, hybrid, personal
+		gifLen: 650, //the length of the gifs, essentially how long will the gifs grab information from ctx
+		gifRate: 10000, //the create gif interval rate
+		imgOrGif: "gif", //the default method for frames, should it post an image or a gif 
+		uid: userId, //the user id of the user in personal mode
+		guid: guildId
+	}
+	return emuCon;
+}
 
 function start(se) { //starting and restarting the emulator
 	se.canvas = createCanvas(144, 160);
@@ -75,13 +103,13 @@ async function sendImage(se, type = "gif"){ //i know, i should be using an enum
 			if(se.frames != 0 && se.mainmess != null){
 				var channel = se.mainmess.channel;
 				se.makeGif = false;
-				if(se.mode == ModeEnum.community){ 
+				if(se.mode == ModeEnum.delete){ 
 					se.mainmess.delete();
 					se.mainmess = await channel.send({files: [{attachment: "img/" + se.id + "img.gif"}]});
 				} else if (se.mode == ModeEnum.continuous){ 
 					se.mainmess = await channel.send({files: [{attachment: "img/" + se.id + "img.gif"}]});
 				}
-				else{ //edits
+				else if (se.mode == ModeEnum.edit){ 
 					var pid = await se.gid.send({files: [{attachment: "img/" + se.id + "img.gif"}]}); 
 					se.mainmess.edit(pid.attachments.first().url);
 				}
@@ -92,19 +120,18 @@ async function sendImage(se, type = "gif"){ //i know, i should be using an enum
 		}, se.gifLen);
 	}
 	else if(type == "img"){
-		if(se.mode == ModeEnum.continuous){
+		if(se.mode == ModeEnum.delete){
 			se.mainmess.delete();
 			se.mainmess = await channel.send({files: [{attachment: "img/" + se.id + "img.png"}]});
 		} else if (se.mode == ModeEnum.continuous){
 			se.mainmess = await channel.send({files: [{attachment: "img/" + se.id + "img.png"}]});
 		}
-		else{
+		else if (se.mode == ModeEnum.edit){ 
 			var pid = await se.gid.send({files: [{attachment: "img/" + se.id + "img.png"}]});
 			se.mainmess.edit(pid.attachments.first().url);
 		}
 	}
 }
-
 
 function saveSRAM(message, se){ //saves the sram to a file, currently, restoring the sram does not work, but it's not that important as save states do
 	if (GameBoyEmulatorInitialized(se) && GameBoyEmulatorPlaying(se)) {
@@ -132,273 +159,43 @@ function save(message, se){ //save the state that the emulator is in
 	}
 }
 
-
 function startGame(message, rom, romname){ //starts the game in one of 3 modes
-	message.channel.send(
-		"Start the game in\n"
-		+ "`1` - Community mode, everyone can control the game with messages, no reactions\n"
-		+ "`2` - Hybrid mode, everyone can control with messages, you can control with reactions\n"
-		+ "`3` - Personal mode, you can control with messages or reactions, no one else can\n"
-		+ "`4` - Continuous-frame mode, like mode 1 but frame images are not deleted\n"
-			).then(() => {
+	let messageString = "Start the game in\n";
+	Object.keys(ModeEnum).forEach(key =>{
+		messageString += "`" + (ModeEnum[key] + "` - " + key + " mode\n");
+	});
+	message.channel.send(messageString).then(() => {
 		const filter = m => message.author.id === m.author.id;
 	
 		message.channel.awaitMessages(filter, { time: 60000, max: 1, errors: ['time'] })
 			.then(messages => {
 				if(Number.isInteger(parseInt(messages.first().content))){
+					//TODO: check if is valid mode
 					const mode = parseInt(messages.first().content); 
-					console.log("DEBUG: mode:" + mode);
-					switch(mode){
-						case 1: case 4: 
-						message.channel.send("Starting game in" + mode == 1 ? "Community" : "Continuous-frame" + " mode... this takes about 3 seconds to process the first 100 frames");
-						var emuCon = {
-							gb: null, //the gameboy instance
-							canvas: createCanvas(144,160), //the canvas for the gameboy
-							ctx: null, //the ctx needed for gif creation
-							int: null, // the interval for frams
-							ctxint: null, //the interval for the ctx for the gifs
-							gifint: null, //the interval to create gifs (just so if no one is pressing any buttons, the game at least sometimes spits out frames to discored)
-							frames: 0, //the amount of frames created, only needed for error handling
-							mainmess: null, //the main message that the bot creates for the emulation, kinda like the container for the emulation in the form of the message
-							makeGif: false, //should it be making a gif?
-							gif: null, //the gif object would be here
-							romname: romname, //the name of the rom, the file name too
-							id: "g" + message.guild.id, //the key of the map, used to uniquely identify saves 
-							chid: message.channel.id, //the channel id to check for new commands
-							dat: rom, //the data of the rom
-							mode: mode, //the mode that was selected, community, hybrid, personal
-							gifLen: 650, //the length of the gifs, essentially how long will the gifs grab information from ctx
-							gifRate: 10000, //the create gif interval rate
-							imgOrGif: "gif", //the default method for frames, should it post an image or a gif 
-							uid: 0 //the user id of the user in personal mode
-						}
-						serverList.set("g" + message.guild.id, emuCon);
-						var serverEmu = serverList.get("g" + message.guild.id);
-						start(serverEmu);
-						setTimeout(async function(){
-								serverEmu.mainmess = await message.channel.send("game");
-						}, 100);
-						break;
+					message.channel.send("Starting game... this takes about 3 seconds to process the first 100 frames");
+					//Don't support single user now
+					const emuId = "g" +  message.guild.id;
+					
+					var emuCon = createEmulator(mode, romname, rom, message.guild.id, message.channel.id, message.author.id);
+					serverList.set(emuId, emuCon);
+					var serverEmu = serverList.get(emuId);
+					
+					start(serverEmu);
+					setTimeout(async function(){
+							serverEmu.mainmess = await message.channel.send("game");
+					}, 100);
 
-						case 2:
-						message.channel.send("Type the channel **id** that will be for posting gifs that is required for Hybrid and Personal mode.\nIf you don't know how, you need to enable developer mode in your discord settings: Settings -> Appearance -> Advanced -> Developer Mode\nThen right click the channel and click Copy ID");
-						message.channel.awaitMessages(filter, { time: 60000, max: 1, errors: ['time'] })
-							.then(messages => { 
-							if(Number.isInteger(parseInt(messages.first().content))){
-								if(bot.channels.cache.get(messages.first().content)){
-									message.channel.send("Starting game in Hybrid mode... this takes about 3 seconds to process the first 100 frames");
-									var emuCon = {
-										gb: null,
-										canvas: createCanvas(144,160),
-										ctx: null,
-										int: null,
-										ctxint: null,
-										gifint: null,
-										frames: 0,
-										mainmess: null,
-										makeGif: false,
-										gif: null,
-										romname: romname,
-										id: "g" + message.guild.id, 
-										chid: message.channel.id, //channel id, for getting input
-										gid: bot.channels.cache.get(messages.first().content), //channel id for posting gifs
-										dat: rom, //rom data
-										mode: mode,
-										cid: message.author.id, //controller id, who is controlling the emulator with reactions
-										gifLen: 650,
-										gifRate: 10000,
-										imgOrGif: "gif",
-										uid: 0 //only for mode 3
-									}
-									serverList.set("g" + message.guild.id, emuCon);
-									var serverEmu = serverList.get("g" + message.guild.id);
-									start(serverEmu);
-									setTimeout(async function(){
-											serverEmu.mainmess = await message.channel.send("game");
-											await serverEmu.mainmess.react("⬆️");
-											await serverEmu.mainmess.react("⬇️");
-											await serverEmu.mainmess.react("⬅️");
-											await serverEmu.mainmess.react("➡️");
-											await serverEmu.mainmess.react("🅰️");
-											await serverEmu.mainmess.react("🅱️");
-											await serverEmu.mainmess.react("745361595240022066");
-											await serverEmu.mainmess.react("745361584783884391");
-									}, 100);
-								}
-								else{
-									message.channel.send("That channel id does not exist");
-								}
-							}
-							else{
-								message.channel.send("That isn't a valid channel ID");
-							}
-						});
-						break;
-						case 3:
-						message.channel.send("Type the channel **id** that will be for posting gifs that is required for Hybrid and Personal mode.\nIf you don't know how, you need to enable developer mode in your discord settings: Settings -> Appearance -> Advanced -> Developer Mode\nThen right click the channel and click Copy ID");
-						message.channel.awaitMessages(filter, { time: 60000, max: 1, errors: ['time'] })
-							.then(messages => { 
-							if(Number.isInteger(parseInt(messages.first().content))){
-								if(bot.channels.cache.get(messages.first().content)){
-									message.channel.send("Starting game in Personal mode... this takes about 3 seconds to process the first 100 frames");
-									var emuCon = {
-										gb: null,
-										canvas: createCanvas(144,160),
-										ctx: null,
-										int: null,
-										ctxint: null,
-										gifint: null,
-										frames: 0,
-										mainmess: null,
-										makeGif: false,
-										gif: null,
-										romname: romname,
-										id: "u" + message.author.id, 
-										chid: message.channel.id, //channel id, for getting input
-										gid: bot.channels.cache.get(messages.first().content), //channel id for posting gifs
-										dat: rom, //rom data
-										mode: mode,
-										cid: message.author.id, //controller id
-										gifLen: 650,
-										gifRate: 10000,
-										imgOrGif: "gif",
-										uid: message.author.id
-									}
-									serverList.set("u" + message.author.id, emuCon);
-									var serverEmu = serverList.get("u" + message.author.id);
-									start(serverEmu);
-									setTimeout(async function(){
-											serverEmu.mainmess = await message.channel.send("game");
-											await serverEmu.mainmess.react("⬆️");
-											await serverEmu.mainmess.react("⬇️");
-											await serverEmu.mainmess.react("⬅️");
-											await serverEmu.mainmess.react("➡️");
-											await serverEmu.mainmess.react("🅰️");
-											await serverEmu.mainmess.react("🅱️");
-											await serverEmu.mainmess.react("745361595240022066");
-											await serverEmu.mainmess.react("745361584783884391");
-									}, 100);
-								}
-								else{
-									message.channel.send("That channel id does not exist");
-								}
-							}
-							else{
-								message.channel.send("That isn't a valid channel ID");
-							}
-						});
-						break;
-						default: 
-							message.channel.send("Type a valid option next time");
-					}
-				}
-				else{	
-					message.channel.send("Use a number to select");
 				}
 			})
-			.catch(() => {
-				message.channel.send("You didn't specify the type of emulation");
+			.catch(e => {
+				message.channel.send("Something broke");
+				console.error(e)
 			});
 	});
 }
 
-//reaction stuff
-
-bot.on('messageReactionRemove', (reaction, user) => {
-	var se = serverList.get("g" + reaction.message.guild.id);
-	if(!se){
-		se = serverList.get("u" + user.id);
-	}
-	if(se){	
-		if(reaction.message.id == se.mainmess){ //checks if the reaction was on the emulator message
-			if(user.id == se.cid){ //checks if the reaction that was added was the controller id
-				var key = "nothing";
-				if(reaction._emoji.name == "⬆️"){
-					key = "u";
-				}
-				if(reaction._emoji.name == "⬇️"){
-					key = "d";
-				}
-				if(reaction._emoji.name == "⬅️"){
-					key = "l";
-				}
-				if(reaction._emoji.name == "➡️"){
-					key = "r";
-				}
-				if(reaction._emoji.name == "🅰️"){
-					key = "a";
-				}
-				if(reaction._emoji.name == "🅱️"){
-					key = "b";
-				}
-				if(reaction._emoji.name == "start" || reaction._emoji.name == "👍"){
-					key = "start";
-				}
-				if(reaction._emoji.name == "select"){
-					key = "select";
-				}
-				if(key != "nothing"){
-					GameBoyKeyUp(key, se);
-				}
-			}
-		}
-	}
-});
-
 bot.on('ready', () => {
 	console.info(`Logged in as ${bot.user.tag}!`);
-});
-
-bot.on('messageReactionAdd', async (reaction, user) => {
-	if (reaction.partial) {
-		try {
-			await reaction.fetch();
-		} catch (error) {
-			console.log('Something went wrong when fetching the message: ', error);
-			return;
-		}
-	}
-	var se = serverList.get("g" + reaction.message.guild.id);
-	if(!se){
-		se = serverList.get("u" + user.id);
-	}
-	if(se){	
-		if(reaction.message.id == se.mainmess){
-			if(user.id == se.cid){
-				var key = "nothing";
-				if(reaction._emoji.name == "⬆️"){
-					key = "u";
-				}
-				if(reaction._emoji.name == "⬇️"){
-					key = "d";
-				}
-				if(reaction._emoji.name == "⬅️"){
-					key = "l";
-				}
-				if(reaction._emoji.name == "➡️"){
-					key = "r";
-				}
-				if(reaction._emoji.name == "🅰️"){
-					key = "a";
-				}
-				if(reaction._emoji.name == "🅱️"){
-					key = "b";
-				}
-				if(reaction._emoji.name == "start" || reaction.emoji.name == "👍"){
-					console.log("pressed start");
-					key = "start";
-				}
-				if(reaction._emoji.name == "select"){
-					key = "select";
-				}
-				console.log(key);
-				if(key != "nothing"){
-					sendImage(se, se.imgOrGif);
-					GameBoyKeyDown(key, se);
-				}
-			}
-		}
-	}
 });
 
 bot.on('message', async message =>{
