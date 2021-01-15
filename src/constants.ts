@@ -1,9 +1,8 @@
 
 export enum ModeEnum {
-    community = 1,
-    hybrid = 2,
-    personal = 3,
-    continuous = 4
+    delete = 1,
+    continuous = 2,
+    edit = 3
 }
 
 // cache paths
