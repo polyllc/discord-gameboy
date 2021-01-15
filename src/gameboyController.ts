@@ -16,6 +16,33 @@ let serverEmu = 1;
 let canvasWidth = defaultCanvasWidth;
 let canvasHeight = defaultCanvasHeight;
 
+//TODO make this a class
+function createEmulator(mode, romname, rom, guildId, channelId, userId = 0) {
+    const emuCon = {
+        gb: null, //the gameboy instance
+        canvas: createCanvas(144, 160), //the canvas for the gameboy
+        ctx: null, //the ctx needed for gif creation
+        int: null, // the interval for frams
+        ctxint: null, //the interval for the ctx for the gifs
+        gifint: null, //the interval to create gifs (just so if no one is pressing any buttons, the game at least sometimes spits out frames to discored)
+        frames: 0, //the amount of frames created, only needed for error handling
+        mainmess: null, //the main message that the bot creates for the emulation, kinda like the container for the emulation in the form of the message
+        makeGif: false, //should it be making a gif?
+        gif: null, //the gif object would be here
+        romname: romname, //the name of the rom, the file name too
+        id: "g" + guildId, //the key of the map, used to uniquely identify saves 
+        chid: channelId, //the channel id to check for new commands
+        dat: rom, //the data of the rom
+        mode: mode, //the mode that was selected, community, hybrid, personal
+        gifLen: 650, //the length of the gifs, essentially how long will the gifs grab information from ctx
+        gifRate: 10000, //the create gif interval rate
+        imgOrGif: "gif", //the default method for frames, should it post an image or a gif 
+        uid: userId, //the user id of the user in personal mode
+        guid: guildId
+    }
+    return emuCon;
+}
+
 function start(se) { //starting and restarting the emulator
     se.canvas = createCanvas(canvasWidth, canvasHeight);
     se.ctx = se.canvas.getContext('2d');
@@ -26,173 +53,37 @@ function start(se) { //starting and restarting the emulator
 }
 
 //for later information, se stands for Server Emulator
-
-//reaction stuff
-function startGame(message: Discord.Message, rom, romname) { //starts the game in one of 3 modes
-    message.channel.send(
-        "Start the game in\n"
-        + "`1` - Community mode, everyone can control the game with messages, no reactions\n"
-        + "`2` - Hybrid mode, everyone can control with messages, you can control with reactions\n"
-        + "`3` - Personal mode, you can control with messages or reactions, no one else can\n"
-        + "`4` - Continuous-frame mode, like mode 1 but frame images are not deleted\n"
-    ).then(() => {
-        const filter = m => message.author.id === m.author.id;
+function startGame(message, rom, romname) { //starts the game in one of 3 modes
+    let messageString = "Start the game in\n"
+    Object.keys(ModeEnum).forEach(key => {
+        messageString += "`" + (ModeEnum[key] + "` - " + key + " mode\n")
+    });
+    message.channel.send(messageString).then(() => {
+        const filter = m => message.author.id === m.author.id
 
         message.channel.awaitMessages(filter, { time: 60000, max: 1, errors: ['time'] })
             .then(messages => {
                 if (Number.isInteger(parseInt(messages.first().content))) {
+                    //TODO: check if is valid mode
                     const mode = parseInt(messages.first().content);
-                    console.log("DEBUG: mode:" + mode);
-                    switch (mode) {
-                        case 1: case 4:
-                            message.channel.send("Starting game in" + (mode == 1) ? "Community" : "Continuous-frame" + " mode... this takes about 3 seconds to process the first 100 frames");
-                            var emuCon = {
-                                gb: null, //the gameboy instance
-                                canvas: createCanvas(144, 160), //the canvas for the gameboy
-                                ctx: null, //the ctx needed for gif creation
-                                int: null, // the interval for frams
-                                ctxint: null, //the interval for the ctx for the gifs
-                                gifint: null, //the interval to create gifs (just so if no one is pressing any buttons, the game at least sometimes spits out frames to discored)
-                                frames: 0, //the amount of frames created, only needed for error handling
-                                mainmess: null, //the main message that the bot creates for the emulation, kinda like the container for the emulation in the form of the message
-                                makeGif: false, //should it be making a gif?
-                                gif: null, //the gif object would be here
-                                romname: romname, //the name of the rom, the file name too
-                                id: "g" + message.guild.id, //the key of the map, used to uniquely identify saves 
-                                chid: message.channel.id, //the channel id to check for new commands
-                                dat: rom, //the data of the rom
-                                mode: mode, //the mode that was selected, community, hybrid, personal
-                                gifLen: 650, //the length of the gifs, essentially how long will the gifs grab information from ctx
-                                gifRate: 10000, //the create gif interval rate
-                                imgOrGif: "gif", //the default method for frames, should it post an image or a gif 
-                                uid: 0 //the user id of the user in personal mode
-                            }
-                            serverList.set("g" + message.guild.id, emuCon);
-                            var serverEmu = serverList.get("g" + message.guild.id);
-                            start(serverEmu);
-                            setTimeout(async function () {
-                                serverEmu.mainmess = await message.channel.send("game");
-                            }, 100);
-                            break;
+                    message.channel.send("Starting game... this takes about 3 seconds to process the first 100 frames")
+                    //Don't support single user now
+                    const emuId = "g" + message.guild.id
 
-                        case 2:
-                            message.channel.send("Type the channel **id** that will be for posting gifs that is required for Hybrid and Personal mode.\nIf you don't know how, you need to enable developer mode in your discord settings: Settings -> Appearance -> Advanced -> Developer Mode\nThen right click the channel and click Copy ID");
-                            message.channel.awaitMessages(filter, { time: 60000, max: 1, errors: ['time'] })
-                                .then(messages => {
-                                    if (Number.isInteger(parseInt(messages.first().content))) {
-                                        if (bot.channels.cache.get(messages.first().content)) {
-                                            message.channel.send("Starting game in Hybrid mode... this takes about 3 seconds to process the first 100 frames");
-                                            var emuCon = {
-                                                gb: null,
-                                                canvas: createCanvas(144, 160),
-                                                ctx: null,
-                                                int: null,
-                                                ctxint: null,
-                                                gifint: null,
-                                                frames: 0,
-                                                mainmess: null,
-                                                makeGif: false,
-                                                gif: null,
-                                                romname: romname,
-                                                id: "g" + message.guild.id,
-                                                chid: message.channel.id, //channel id, for getting input
-                                                gid: bot.channels.cache.get(messages.first().content), //channel id for posting gifs
-                                                dat: rom, //rom data
-                                                mode: mode,
-                                                cid: message.author.id, //controller id, who is controlling the emulator with reactions
-                                                gifLen: 650,
-                                                gifRate: 10000,
-                                                imgOrGif: "gif",
-                                                uid: 0 //only for mode 3
-                                            }
-                                            serverList.set("g" + message.guild.id, emuCon);
-                                            var serverEmu = serverList.get("g" + message.guild.id);
-                                            start(serverEmu);
-                                            setTimeout(async function () {
-                                                serverEmu.mainmess = await message.channel.send("game");
-                                                await serverEmu.mainmess.react("⬆️");
-                                                await serverEmu.mainmess.react("⬇️");
-                                                await serverEmu.mainmess.react("⬅️");
-                                                await serverEmu.mainmess.react("➡️");
-                                                await serverEmu.mainmess.react("🅰️");
-                                                await serverEmu.mainmess.react("🅱️");
-                                                await serverEmu.mainmess.react("745361595240022066");
-                                                await serverEmu.mainmess.react("745361584783884391");
-                                            }, 100);
-                                        }
-                                        else {
-                                            message.channel.send("That channel id does not exist");
-                                        }
-                                    }
-                                    else {
-                                        message.channel.send("That isn't a valid channel ID");
-                                    }
-                                });
-                            break;
-                        case 3:
-                            message.channel.send("Type the channel **id** that will be for posting gifs that is required for Hybrid and Personal mode.\nIf you don't know how, you need to enable developer mode in your discord settings: Settings -> Appearance -> Advanced -> Developer Mode\nThen right click the channel and click Copy ID");
-                            message.channel.awaitMessages(filter, { time: 60000, max: 1, errors: ['time'] })
-                                .then(messages => {
-                                    if (Number.isInteger(parseInt(messages.first().content))) {
-                                        if (bot.channels.cache.get(messages.first().content)) {
-                                            message.channel.send("Starting game in Personal mode... this takes about 3 seconds to process the first 100 frames");
-                                            var emuCon = {
-                                                gb: null,
-                                                canvas: createCanvas(144, 160),
-                                                ctx: null,
-                                                int: null,
-                                                ctxint: null,
-                                                gifint: null,
-                                                frames: 0,
-                                                mainmess: null,
-                                                makeGif: false,
-                                                gif: null,
-                                                romname: romname,
-                                                id: "u" + message.author.id,
-                                                chid: message.channel.id, //channel id, for getting input
-                                                gid: bot.channels.cache.get(messages.first().content), //channel id for posting gifs
-                                                dat: rom, //rom data
-                                                mode: mode,
-                                                cid: message.author.id, //controller id
-                                                gifLen: 650,
-                                                gifRate: 10000,
-                                                imgOrGif: "gif",
-                                                uid: message.author.id
-                                            }
-                                            serverList.set("u" + message.author.id, emuCon);
-                                            var serverEmu = serverList.get("u" + message.author.id);
-                                            start(serverEmu);
-                                            setTimeout(async function () {
-                                                serverEmu.mainmess = await message.channel.send("game");
-                                                await serverEmu.mainmess.react("⬆️");
-                                                await serverEmu.mainmess.react("⬇️");
-                                                await serverEmu.mainmess.react("⬅️");
-                                                await serverEmu.mainmess.react("➡️");
-                                                await serverEmu.mainmess.react("🅰️");
-                                                await serverEmu.mainmess.react("🅱️");
-                                                await serverEmu.mainmess.react("745361595240022066");
-                                                await serverEmu.mainmess.react("745361584783884391");
-                                            }, 100);
-                                        }
-                                        else {
-                                            message.channel.send("That channel id does not exist");
-                                        }
-                                    }
-                                    else {
-                                        message.channel.send("That isn't a valid channel ID");
-                                    }
-                                });
-                            break;
-                        default:
-                            message.channel.send("Type a valid option next time");
-                    }
-                }
-                else {
-                    message.channel.send("Use a number to select");
+                    var emuCon = createEmulator(mode, romname, rom, message.guild.id, message.channel.id, message.author.id)
+                    serverList.set(emuId, emuCon)
+                    var serverEmu = serverList.get(emuId)
+
+                    start(serverEmu)
+                    setTimeout(async function () {
+                        serverEmu.mainmess = await message.channel.send("game")
+                    }, 100);
+
                 }
             })
-            .catch(() => {
-                message.channel.send("You didn't specify the type of emulation");
+            .catch((e: any) => {
+                message.channel.send("Something broke")
+                console.error(e)
             });
     });
 }
