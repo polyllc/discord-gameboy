@@ -6,7 +6,7 @@ export enum ModeEnum {
 }
 
 // cache paths
-export const IMG_PATH = 'imgs/'
+export const IMG_PATH = 'img/'
 export const SAVES_PATH = 'saves/'
 export const GAMES_PATH = 'games/'
 
