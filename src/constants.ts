@@ -11,5 +11,5 @@ export const SAVES_PATH = 'saves/'
 export const GAMES_PATH = 'games/'
 
 // canvas
-export const defaultCanvasWidth = 160;
-export const defaultCanvasHeight = 144;
+export const defaultCanvasWidth = 144;
+export const defaultCanvasHeight = 160;
