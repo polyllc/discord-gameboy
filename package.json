@@ -22,8 +22,8 @@
     "canvas": "^2.6.1",
     "discord.js": "^12.5.1",
     "dotenv": "^8.2.0",
-    "gameboy": "git+https://github.com/paulohgodinho/gameboy.git",
     "gifencoder": "^2.0.1",
+    "jsgbc": "^0.5.8",
     "request": "^2.88.2",
     "typescript": "^4.1.3"
   },
