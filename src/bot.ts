@@ -1,5 +1,5 @@
 import * as Discord from 'discord.js'
-import { on_message, messageReactionRemove, messageReactionAdd } from './gameboyController'
+import { on_message } from './gameboyController'
 
 
 
