@@ -95,17 +95,22 @@ export default class ServerEmulator {
             throw Error(`Must set message and channel.`)
 
         const gif = await this.getImage()
+        if (!gif) return
+
+        const attachment = new Discord.MessageAttachment(gif, 'game')
+        const embed = new Discord.MessageEmbed()
+        embed.attachFiles([attachment])
 
         switch (this.sendMode) {
             case ModeEnum.delete:
                 await this.message.delete()
-                this.message = await this.channel.send({ content: gif })
+                this.message = await this.channel.send(embed)
                 break
             case ModeEnum.continuous:
-                this.message = await this.channel.send({ content: gif })
+                this.message = await this.channel.send(embed)
                 break
             case ModeEnum.edit:
-                await this.message.edit({ content: gif })
+                await this.message.edit(embed)
                 break
         }
 
@@ -121,9 +126,15 @@ export default class ServerEmulator {
         // sleep for gif length
         await new Promise(resolve => setTimeout(resolve, this.gifLength))
         this.encoder.finish()
-        // TOOD figure out how to get image
-        return 'test'
 
+        /* no need for this for now i guess
+        const chunks: any[] = []
+        for await (const chunk of reader) {
+            chunks.push(chunk)
+        }
+        return Buffer.concat(chunks)
+        */
+        return reader
     }
 
     public getGameboy() {
