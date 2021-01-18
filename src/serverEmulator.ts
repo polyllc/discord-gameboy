@@ -1,4 +1,3 @@
-import * as request from 'request'
 import * as Discord from 'discord.js'
 import { Canvas, CanvasRenderingContext2D } from 'canvas'
 import * as fs from 'fs'
@@ -44,13 +43,15 @@ export default class ServerEmulator {
         this.encoder.setDelay(1000 / this.fps)
         this.encoder.setQuality(10)
         this.encoder.setRepeat(0)
+        const context: AudioContext = new AudioContext()
+        context.outStream = fs.createWriteStream("\\\\.\\NUL")
 
         const canvas = this.canvas = new Canvas(defaultCanvasWidth, defaultCanvasHeight)
         this.canvasContext = canvas.getContext('2d')
         this.gameboy = new GameBoy({
-            isPaused: true,
+            audio: { context },
             lcd: {
-                canvas,
+                canvas: this.canvas,
                 offscreenCanvas: new Canvas(defaultCanvasWidth, defaultCanvasHeight)
             },
             isSoundEnabled: false
