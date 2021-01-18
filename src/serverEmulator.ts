@@ -65,9 +65,16 @@ export default class ServerEmulator {
         this.gameboy.replaceCartridge(rom)
     }
 
-    public start() {
+    public start(message: Discord.Message, channel: Discord.TextChannel) {
         if (!this.sendMode)
-            return false
+            throw new Error('You need to set SendMode for the emulator')
+
+        this.message = message
+        this.channel = channel
+
+        if (!this.gameboy.cartridge)
+            throw new Error('ROM has to be loaded to start the emulator')
+
         this.gameboy.turnOn()
         this.gifInterval = setInterval(() => {
             this.encoder?.addFrame(this.canvasContext)
