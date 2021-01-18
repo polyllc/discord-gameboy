@@ -2,22 +2,22 @@ import ServerEmulator from './serverEmulator'
 
 
 class ServerMap {
-    private games: Map<number, ServerEmulator>
+    private games: Map<string, ServerEmulator>
 
     constructor() {
-        this.games = new Map<number, ServerEmulator>()
+        this.games = new Map<string, ServerEmulator>()
     }
 
-    public createEmulator(id: number, emulator: ServerEmulator) {
+    public createEmulator(id: string, emulator: ServerEmulator) {
         this.games.set(id, emulator)
         return emulator
     }
 
-    public getEmulator(id: number) {
+    public getEmulator(id: string) {
         return this.games.get(id)
     }
 
-    public destroyEmulator(id: number) {
+    public destroyEmulator(id: string) {
         const serverEmulator = this.games.get(id)
         serverEmulator?.destroy()
         return this.games.delete(id)
