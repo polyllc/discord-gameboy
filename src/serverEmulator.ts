@@ -20,7 +20,7 @@ export default class ServerEmulator {
     private guild: Discord.Guild
     private message: Discord.Message
     private channel: Discord.TextChannel
-    private sendingMode: ModeEnum
+    private sendMode?: ModeEnum
 
     // canvas
     private width: number
@@ -33,11 +33,10 @@ export default class ServerEmulator {
     private gifLength: number
 
 
-    constructor(server_id: Discord.Guild, message_id: Discord.Message, channel_id: Discord.TextChannel, sendingMode: ModeEnum) {
+    constructor(server_id: Discord.Guild, message_id: Discord.Message, channel_id: Discord.TextChannel) {
         this.guild = server_id
         this.message = message_id
         this.channel = channel_id
-        this.sendingMode = sendingMode
 
         this.width = defaultCanvasWidth
         this.height = defaultCanvasHeight
@@ -69,6 +68,8 @@ export default class ServerEmulator {
     }
 
     public start() {
+        if (!this.sendMode)
+            return false
         this.gameboy.turnOn()
         this.gifInterval = setInterval(() => {
             this.encoder?.addFrame(this.canvasContext)
@@ -76,12 +77,13 @@ export default class ServerEmulator {
         this.sendInterval = setInterval(() => {
             this.sendImage()
         }, this.gifLength)
+        return true
     }
 
     async sendImage() {
         const gif = await this.getImage()
 
-        switch (this.sendingMode) {
+        switch (this.sendMode) {
             case ModeEnum.delete:
                 await this.message.delete()
                 this.message = await this.channel.send({ content: gif })
@@ -124,8 +126,13 @@ export default class ServerEmulator {
             clearInterval(this.gifInterval)
         if (this.sendInterval)
             clearInterval(this.sendInterval)
+    }
 
+    public setSendMode(sendMode: ModeEnum) {
+        this.sendMode = sendMode
+    }
 
-
+    public getSendMode(sendMode: ModeEnum) {
+        this.sendMode = sendMode
     }
 }
