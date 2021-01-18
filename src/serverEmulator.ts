@@ -82,10 +82,12 @@ export default class ServerEmulator {
         this.sendInterval = setInterval(() => {
             this.sendImage()
         }, this.gifLength)
-        return true
     }
 
     async sendImage() {
+        if (!this.message || !this.channel) // sanity check
+            throw Error(`Must set message and channel.`)
+
         const gif = await this.getImage()
 
         switch (this.sendMode) {
