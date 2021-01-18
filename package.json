@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/paulohgodinho/discord-gameboy#readme",
   "dependencies": {
+    "axios": "^0.21.1",
     "canvas": "^2.6.1",
     "discord.js": "^12.5.1",
     "dotenv": "^8.2.0",
