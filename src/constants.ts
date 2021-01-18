@@ -13,3 +13,5 @@ export const GAMES_PATH = 'games/'
 // canvas
 export const defaultCanvasWidth = 144;
 export const defaultCanvasHeight = 160;
+// TODO make prefix dynamic (changable per guild)
+export const PREFIX = 'gb!'
