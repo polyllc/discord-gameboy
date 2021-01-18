@@ -9,119 +9,6 @@ import * as fs from 'fs'
 
 import { ModeEnum, defaultCanvasHeight, defaultCanvasWidth, IMG_PATH, GAMES_PATH, SAVES_PATH } from './constants'
 
-let canvas;
-let serverList = new Map(); //creates a map that will hold all the data for each emulator instance
-let serverEmu = 1;
-
-let canvasWidth = defaultCanvasWidth;
-let canvasHeight = defaultCanvasHeight;
-
-//TODO make this a class
-function createEmulator(mode, romname, rom, guildId, channelId, userId = 0) {
-    const emuCon = {
-        gb: null, //the gameboy instance
-        canvas: createCanvas(144, 160), //the canvas for the gameboy
-        ctx: null, //the ctx needed for gif creation
-        int: null, // the interval for frams
-        ctxint: null, //the interval for the ctx for the gifs
-        gifint: null, //the interval to create gifs (just so if no one is pressing any buttons, the game at least sometimes spits out frames to discored)
-        frames: 0, //the amount of frames created, only needed for error handling
-        mainmess: null, //the main message that the bot creates for the emulation, kinda like the container for the emulation in the form of the message
-        makeGif: false, //should it be making a gif?
-        gif: null, //the gif object would be here
-        romname: romname, //the name of the rom, the file name too
-        id: "g" + guildId, //the key of the map, used to uniquely identify saves 
-        chid: channelId, //the channel id to check for new commands
-        dat: rom, //the data of the rom
-        mode: mode, //the mode that was selected, community, hybrid, personal
-        gifLen: 650, //the length of the gifs, essentially how long will the gifs grab information from ctx
-        gifRate: 10000, //the create gif interval rate
-        imgOrGif: "gif", //the default method for frames, should it post an image or a gif 
-        uid: userId, //the user id of the user in personal mode
-        guid: guildId
-    }
-    return emuCon;
-}
-
-function start(se) { //starting and restarting the emulator
-    se.canvas = createCanvas(canvasWidth, canvasHeight);
-    se.ctx = se.canvas.getContext('2d');
-    clearLastEmulation(se);
-    se.gb = new Gameboy(se.canvas, se.dat, undefined);
-    se.gb.start();
-    run(se);
-}
-
-//for later information, se stands for Server Emulator
-function startGame(message, rom, romname) { //starts the game in one of 3 modes
-    let messageString = "Start the game in\n"
-    Object.keys(ModeEnum).forEach(key => {
-        messageString += "`" + (ModeEnum[key] + "` - " + key + " mode\n")
-    });
-    message.channel.send(messageString).then(() => {
-        const filter = m => message.author.id === m.author.id
-
-        message.channel.awaitMessages(filter, { time: 60000, max: 1, errors: ['time'] })
-            .then(messages => {
-                if (Number.isInteger(parseInt(messages.first().content))) {
-                    //TODO: check if is valid mode
-                    const mode = parseInt(messages.first().content);
-                    message.channel.send("Starting game... this takes about 3 seconds to process the first 100 frames")
-                    //Don't support single user now
-                    const emuId = "g" + message.guild.id
-
-                    var emuCon = createEmulator(mode, romname, rom, message.guild.id, message.channel.id, message.author.id)
-                    serverList.set(emuId, emuCon)
-                    var serverEmu = serverList.get(emuId)
-
-                    start(serverEmu)
-                    setTimeout(async function () {
-                        serverEmu.mainmess = await message.channel.send("game")
-                    }, 100);
-
-                }
-            })
-            .catch((e: any) => {
-                message.channel.send("Something broke")
-                console.error(e)
-            });
-    });
-}
-
-
-async function run(se) {
-    if (GameBoyEmulatorInitialized(se)) { //checks if it has started (which would be an error if it didn't and there would be a bug elsewhere)
-        if (!GameBoyEmulatorPlaying(se)) {
-            se.gb.stopEmulator &= 1; //initial startup of the gameboy
-            var dateObj = new Date();
-            se.gb.firstIteration = dateObj.getTime();
-            se.gb.iterations = 0;
-            se.int = setInterval(function () {
-                se.gb.run(); //runs each frame one by one with this function
-            }, 4);
-            se.ctxint = setInterval(function () { //the interval for saving the images to a gif or saving an image to disk, setting the interval speed could improve or degrade performance
-                var base64Data = se.canvas.toDataURL().replace(/^data:image\/png;base64,/, "");
-                fs.writeFile(IMG_PATH + se.id + "img.png", base64Data, 'base64', function (err) {
-
-                });
-                if (se.makeGif) {
-                    se.gif.addFrame(se.ctx);
-                    se.frames++;
-
-                }
-            }, 20);
-            se.gifint = setInterval(function () {
-                sendImage(se, se.imgOrGif);
-            }, se.gifRate);
-        }
-        else {
-            console.log("already running");
-        }
-    }
-    else {
-        console.log("hasn't been started");
-    }
-}
 
 async function sendImage(se, type = "gif") { //i know, i should be using an enum
     let channel = se.mainmess.channel;
@@ -195,8 +82,6 @@ function save(message, se) { //save the state that the emulator is in
 }
 
 
-
-
 function matchKey(key) {	//Maps a keyboard key to a gameboy key.
     //Order: Right, Left, Up, Down, A, B, Select, Start
     var keymap = ["r", "l", "u", "d", "a", "b", "select", "start"];	//Keyboard button map.
@@ -207,12 +92,7 @@ function matchKey(key) {	//Maps a keyboard key to a gameboy key.
     }
     return -1;
 }
-function GameBoyEmulatorInitialized(se) {
-    return (typeof se.gb == "object" && se.gb != null);
-}
-function GameBoyEmulatorPlaying(se) {
-    return ((se.gb.stopEmulator & 2) == 0);
-}
+
 function GameBoyKeyDown(key, se) {
     if (GameBoyEmulatorInitialized(se) && GameBoyEmulatorPlaying(se)) {
         GameBoyJoyPadEvent(matchKey(key), true, se);
@@ -231,15 +111,6 @@ function GameBoyKeyUp(key, se) {
     }
 }
 
-function clearLastEmulation(se) {
-    if (GameBoyEmulatorInitialized(se) && GameBoyEmulatorPlaying(se)) {
-        clearInterval(se.int);
-        clearInterval(se.ctxint);
-        clearInterval(se.gifint);
-        se.gb.stopEmulator |= 2;
-        se.gb = null;
-    }
-}
 
 function openSRAM(filename, canvas, message, se) {
     try {
@@ -286,67 +157,10 @@ function openState(filename, canvas, message, se) {
     }
 }
 
-function reset(message, se) {
-    if (GameBoyEmulatorInitialized(se)) {
-        try {
-            start(se);
-            message.channel.send("Reset Emulation");
-        } catch (error) {
-            message.channel.send(error.message + " file: " + error.fileName + " line: " + error.lineNumber);
-        }
-    } else {
-        message.channel.send("Could not restart, as a previous emulation session could not be found.", 1);
-    }
-}
-
 
 
 export const on_message = async message => {
 
-    if (message.content.toLowerCase().startsWith("gameboy help")) {
-        message.channel.send("Controls:\nA - a\nB - b\nSTART - start\nSELECT - select\nDpad Up - u\nDpad Down - d\nDpad Left - l\nDpad Right - r\n\nCommands:\nload rom {rom file uploaded} - loads the uploaded rom\nsave - saves emulator state\nload - loads previous saved state\nreset - resets emulation\nstop - stops emulation\nchange display type - changes whether to use images or gifs for frames\nchange gif length - the length of how long gifs should be grabbing frames\nchange gif rate - the rate at which gifs are naturally sent\ng - update gif now\nf - update frame now");
-    }
-
-    var serverEmu = serverList.get("g" + message.guild?.id);
-    if (!serverEmu) {
-        serverEmu = serverList.get("u" + message.author.id);
-    }
-
-    if (!serverEmu) {
-        if (message.content == "load rom") {
-            console.log(message.attachments);
-            if (message.attachments.size > 0) { //checks if a file was uploaded, \/ checks if its a gameboy or a gameboy color rom
-                if (message.attachments.first().name.substr(message.attachments.first().name.length - 3, message.attachments.first().name.length - 1) == "gbc" || message.attachments.first().name.substr(message.attachments.first().name.length - 3, message.attachments.first().name.length - 1) == ".gb") {
-                    await request.get(message.attachments.first().url) //downloads the rom
-                        .on('error', console.error)
-                        .pipe(fs.createWriteStream('games/' + message.attachments.first().name))
-                    setTimeout(function () { //just to make sure that the file actually was downloaded
-                        startGame(message, fs.readFileSync(GAMES_PATH + message.attachments.first().name), message.attachments.first().name);
-                    }, 2000);
-                }
-                else {
-                    message.reply("rom not valid");
-                }
-            }
-            else {
-                message.reply("upload a rom too");
-            }
-        } else if (message.content == "load test rom") {
-            let debugMode = process.env.DEBUG_MODE
-
-            if (!debugMode) {
-                message.reply("not in debug mode");
-                return;
-            }
-            try {
-                let romPath = process.env.TEST_ROM_PATH
-                startGame(message, fs.readFileSync(romPath), "test rom");
-            } catch (err) {
-                console.log(err)
-                message.reply("could not load test rom");
-            }
-        }
-    }
     if (serverEmu) {
         if (message.channel.id == serverEmu.chid) {
             if (message.author.id == serverEmu.uid && serverEmu.mode == 3 || serverEmu.mode != 3) { //checks if its in mode 3 and the user id is the same as uid in serverEmu to make the emulator "personal"
