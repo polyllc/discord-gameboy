@@ -19,6 +19,9 @@ export const handleCommands = async (message: Discord.Message) => {
     if (message.channel.type === 'dm') // do not reply in dms yet
         return message.reply(`This bot doesn't support playing in dms`)
 
+    if (!message.guild)
+        return message.reply(`You must be in a guild to use this bot`)
+
 
     if (command.args && !args.length) {
         let reply = `You didn't provide any arguments, ${message.author}!`
