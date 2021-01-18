@@ -60,9 +60,8 @@ export default class ServerEmulator {
     /**
      * Helper function to load ROM from path
     */
-    public loadROM(path: string) {
-        const buffer = fs.readFileSync(path)
-        this.gameboy.replaceCartridge(buffer)
+    public loadROM(rom: ArrayBuffer) {
+        this.gameboy.replaceCartridge(rom)
     }
 
     public start() {
