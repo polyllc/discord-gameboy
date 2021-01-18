@@ -5,7 +5,7 @@ import GIFEncoder from 'gifencoder'
 import { GameBoy } from 'jsgbc'
 import * as fs from 'fs'
 import { ModeEnum, defaultCanvasHeight, defaultCanvasWidth, defaultGIFLength, IMG_PATH, GAMES_PATH, SAVES_PATH } from './constants'
-import { clearInterval } from 'timers'
+import { clearInterval, setInterval } from 'timers'
 
 
 
