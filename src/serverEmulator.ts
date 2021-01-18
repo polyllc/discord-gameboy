@@ -1,12 +1,12 @@
 import * as request from 'request'
 import * as Discord from 'discord.js'
-import { Canvas, createCanvas, loadImage, CanvasRenderingContext2D } from 'canvas'
+import { Canvas, CanvasRenderingContext2D } from 'canvas'
+import * as fs from 'fs'
 import GIFEncoder from 'gifencoder'
 import { GameBoy } from 'jsgbc'
-import * as fs from 'fs'
 import { ModeEnum, defaultCanvasHeight, defaultCanvasWidth, defaultGIFLength, IMG_PATH, GAMES_PATH, SAVES_PATH } from './constants'
 import { clearInterval, setInterval } from 'timers'
-
+import { AudioContext } from 'web-audio-api'
 
 
 export default class ServerEmulator {
