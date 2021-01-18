@@ -7,7 +7,7 @@ import { Command } from './command'
 /**
  * Downloads and validates the rom
  */
-const getRom = async (file: Discord.MessageAttachment) => {
+const getRom = async (file: Discord.MessageAttachment) => {    
     if (!file.name?.endsWith('.gb'))
         throw new Error('Invalid rom format.')
 
@@ -31,7 +31,12 @@ const load: Command = {
     aliases: ['load_rom', 'loadrom', 'lr'],
     args: [],
     description: 'Load a rom attached in the message.',
+    optionalArgs: ['test'],
     execute: async (message: Discord.Message, args: string[]) => {
+        if (process.env.DEBUG_MODE && args.includes('test')){
+            return message.reply('TODO: Loading test rom')
+        }
+        
         if (message.attachments.size < 1) {
             return message.reply(`Please attach a rom of the game.`)
         }

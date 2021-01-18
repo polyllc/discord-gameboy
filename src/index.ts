@@ -4,9 +4,7 @@ import * as path from 'path'
 import { IMG_PATH, GAMES_PATH, SAVES_PATH } from './constants'
 import bot from './bot'
 
-dotenv.config({
-    path: path.join(__dirname, '.env')
-})
+dotenv.config({})
 
 
 const createCacheFolders = () => {
