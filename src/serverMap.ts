@@ -18,6 +18,8 @@ class ServerMap {
     }
 
     public destroyEmulator(id: number) {
+        const serverEmulator = this.games.get(id)
+        serverEmulator?.destroy()
         return this.games.delete(id)
     }
 }
