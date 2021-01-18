@@ -8,8 +8,7 @@ class ServerMap {
         this.games = new Map<number, ServerEmulator>()
     }
 
-    public createEmulator(id: number) {
-        const emulator = new ServerEmulator(id)
+    public createEmulator(id: number, emulator: ServerEmulator) {
         this.games.set(id, emulator)
         return emulator
     }
