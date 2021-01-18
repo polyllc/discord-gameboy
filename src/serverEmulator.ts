@@ -8,6 +8,12 @@ import { clearInterval, setInterval } from 'timers'
 import { AudioContext } from 'web-audio-api'
 
 
+const getNULLStream = () => {
+    if (process.platform == 'win32')
+        return fs.createWriteStream("\\\\.\\NUL")
+    return fs.createWriteStream('/dev/null')
+}
+
 export default class ServerEmulator {
     private canvas: Canvas
     private canvasContext: CanvasRenderingContext2D
@@ -44,7 +50,7 @@ export default class ServerEmulator {
         this.encoder.setQuality(10)
         this.encoder.setRepeat(0)
         const context: AudioContext = new AudioContext()
-        context.outStream = fs.createWriteStream("\\\\.\\NUL")
+        context.outStream = getNULLStream()
 
         const canvas = this.canvas = new Canvas(defaultCanvasWidth, defaultCanvasHeight)
         this.canvasContext = canvas.getContext('2d')
