@@ -11,10 +11,6 @@ bot.on('ready', () => {
     console.info(`Logged in as ${bot.user?.tag ?? 'unknown'}!`)
 })
 
-bot.on('messageReactionRemove', messageReactionRemove)
-
-bot.on('messageReactionAdd', messageReactionAdd)
-
 bot.on('message', on_message)
 
 // TODO: make it load commands instead of checking on_message
