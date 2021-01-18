@@ -45,10 +45,9 @@ export default class ServerEmulator {
         this.height = defaultCanvasHeight
         this.gifLength = defaultGIFLength
 
-        this.encoder = new GIFEncoder(this.width, this.height)
-        this.encoder.setDelay(1000 / this.fps)
-        this.encoder.setQuality(10)
-        this.encoder.setRepeat(0)
+        // setup the encoder
+        this.encoder = this.resetEncoder()
+
         const context: AudioContext = new AudioContext()
         context.outStream = getNULLStream()
 
@@ -62,6 +61,7 @@ export default class ServerEmulator {
             },
             isSoundEnabled: false
         })
+        this.gameboy.turnOff()
     }
 
     /**
@@ -84,34 +84,43 @@ export default class ServerEmulator {
         this.gameboy.turnOn()
         this.gifInterval = setInterval(() => {
             this.encoder?.addFrame(this.canvasContext)
-        }, 1000 / this.fps) // 30 fps
+        }, Math.floor(1000 / this.fps)) // 30 fps
         this.sendInterval = setInterval(() => {
             this.sendImage()
         }, this.gifLength)
+
     }
 
     async sendImage() {
         if (!this.message || !this.channel) // sanity check
-            throw Error(`Must set message and channel.`)
+            throw new Error(`Must set message and channel.`)
 
         const gif = await this.getImage()
         if (!gif) return
 
-        const attachment = new Discord.MessageAttachment(gif, 'game')
+        const attachment = new Discord.MessageAttachment(gif, 'game.gif')
         const embed = new Discord.MessageEmbed()
-        embed.attachFiles([attachment])
+            .attachFiles([attachment])
+            //.setThumbnail('attachment://game.gif')
+            .setImage('attachment://game.gif')
 
-        switch (this.sendMode) {
-            case ModeEnum.delete:
-                await this.message.delete()
-                this.message = await this.channel.send(embed)
-                break
-            case ModeEnum.continuous:
-                this.message = await this.channel.send(embed)
-                break
-            case ModeEnum.edit:
-                await this.message.edit(embed)
-                break
+
+        try {
+            switch (this.sendMode) {
+                case ModeEnum.delete:
+                    // send then delete for better experience
+                    const newMessage = await this.channel.send(embed)
+                    await this.message.delete()
+                    this.message = newMessage
+                    break
+                case ModeEnum.continuous:
+                    this.message = await this.channel.send(embed)
+                    break
+                case ModeEnum.edit:
+        } catch (e: unknown) {
+            const error = e as Discord.DiscordAPIError
+            console.error(error)
+            serverMap.destroyEmulator(this.guild.id)
         }
 
     }
@@ -119,22 +128,31 @@ export default class ServerEmulator {
      * creates the gif
      */
     private async getImage() {
-        if (this.gameboy.isPaused() || !this.gameboy.isOn) return null
+        if (!this.gameboy.isOn) return null
 
-        const reader = this.encoder.createReadStream()
-        this.encoder.start()
         // sleep for gif length
-        await new Promise(resolve => setTimeout(resolve, this.gifLength))
+        //await new Promise(resolve => setTimeout(resolve,))
         this.encoder.finish()
 
-        /* no need for this for now i guess
+        const reader = this.encoder.createReadStream()
         const chunks: any[] = []
         for await (const chunk of reader) {
             chunks.push(chunk)
         }
+
+        this.encoder = this.resetEncoder()
         return Buffer.concat(chunks)
-        */
-        return reader
+
+    }
+
+    private resetEncoder() {
+        const encoder = new GIFEncoder(this.width, this.height)
+        encoder.setDelay(Math.floor(1000 / this.fps))
+        encoder.setQuality(10)
+        encoder.setRepeat(0)
+        encoder.start()
+
+        return encoder
     }
 
     public getGameboy() {
