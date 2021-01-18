@@ -18,8 +18,8 @@ export default class ServerEmulator {
 
     // ids
     private guild: Discord.Guild
-    private message: Discord.Message
-    private channel: Discord.TextChannel
+    private message?: Discord.Message
+    private channel?: Discord.TextChannel
     private sendMode?: ModeEnum
 
     // canvas
@@ -33,10 +33,8 @@ export default class ServerEmulator {
     private gifLength: number
 
 
-    constructor(server_id: Discord.Guild, message_id: Discord.Message, channel_id: Discord.TextChannel) {
+    constructor(server_id: Discord.Guild) {
         this.guild = server_id
-        this.message = message_id
-        this.channel = channel_id
 
         this.width = defaultCanvasWidth
         this.height = defaultCanvasHeight
