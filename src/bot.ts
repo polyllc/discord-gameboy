@@ -13,11 +13,10 @@ bot.on('ready', () => {
 })
 
 bot.on('message', message => {
-    on_message(message)
+    // TODO: add all commands, then make on message control gameplay and mentions
+    //on_message(message)
     handleCommands(message)
 })
-
-// TODO: make it load commands instead of checking on_message
 
 
 export default bot;
