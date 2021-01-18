@@ -23,21 +23,22 @@ export const handleCommands = async (message: Discord.Message) => {
         return message.reply(`You must be in a guild to use this bot`)
 
 
-    if (command.args && !args.length) {
-        let reply = `You didn't provide any arguments, ${message.author}!`
+    if (command.args.length != args.length) {
+        let reply = `You didn't provide any arguments, ${message.author.username}!`
 
         if (command.usage) {
             reply += `\nThe proper usage would be: \`${PREFIX}${command.name} ${command.usage}\``
         }
 
-        return message.channel.send(reply)
+        return message.reply(reply)
     }
 
 
     try {
-        command.execute(message, args)
+        await command.execute(message, args)
     } catch (error) {
-        message.reply('error happened')
+        console.log(error)
+        message.reply('Something went wrong.')
     }
 }
 
