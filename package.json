@@ -25,7 +25,8 @@
     "dotenv": "^8.2.0",
     "gifencoder": "^2.0.1",
     "jsgbc": "^0.5.8",
-    "typescript": "^4.1.3"
+    "typescript": "^4.1.3",
+    "web-audio-api": "^0.2.2"
   },
   "devDependencies": {
     "@types/gifencoder": "^2.0.0",
