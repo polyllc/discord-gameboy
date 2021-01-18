@@ -6,6 +6,7 @@ import { GameBoy } from 'jsgbc'
 import { ModeEnum, defaultCanvasHeight, defaultCanvasWidth, defaultGIFLength, IMG_PATH, GAMES_PATH, SAVES_PATH } from './constants'
 import { clearInterval, setInterval } from 'timers'
 import { AudioContext } from 'web-audio-api'
+import serverMap from './serverMap'
 
 
 const getNULLStream = () => {
@@ -26,6 +27,7 @@ export default class ServerEmulator {
     private message?: Discord.Message
     private channel?: Discord.TextChannel
     private sendMode?: ModeEnum
+    private editChannel?: Discord.TextChannel
 
     // canvas
     private width: number
@@ -71,12 +73,22 @@ export default class ServerEmulator {
         this.gameboy.replaceCartridge(rom)
     }
 
-    public start(message: Discord.Message, channel: Discord.TextChannel) {
+    public async start(message: Discord.Message, channel: Discord.TextChannel) {
         if (!this.sendMode)
             throw new Error('You need to set SendMode for the emulator')
 
         this.message = message
         this.channel = channel
+
+        // hack to edit messages
+        const editID = process.env.PRIVATE_HOST_CHANNEL
+        if (editID) {
+            this.editChannel = await this.message.client.channels.fetch(editID) as Discord.TextChannel
+            if (!this.editChannel)
+                console.warn(`Couldn't find private channel, editing mode is disabled.`)
+        }
+
+
 
         if (!this.gameboy.cartridge)
             throw new Error('ROM has to be loaded to start the emulator')
@@ -117,11 +129,23 @@ export default class ServerEmulator {
                     this.message = await this.channel.send(embed)
                     break
                 case ModeEnum.edit:
+                    // this is some hack to edit file,
+                    // basically send first in some private channel then use link to edit attachement
+                    if (!this.editChannel) // sanity check
+                        throw new Error(`Cannot use edit mode.`)
+                    const gifMessage = await this.editChannel.send(attachment)
+                    embed.image = {
+                        url: gifMessage.attachments.first()?.url!
+                    }
+                    await this.message.edit({ embed })
+                    break
+            }
         } catch (e: unknown) {
             const error = e as Discord.DiscordAPIError
             console.error(error)
             serverMap.destroyEmulator(this.guild.id)
         }
+
 
     }
     /**

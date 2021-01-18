@@ -15,9 +15,12 @@ const start: Command = {
         if (!emulator)
             return message.reply(`You need to have a running emulator first.`)
 
+        const noEdit = !process.env.PRIVATE_HOST_CHANNEL
 
         let startString = "Start the game in\n"
-        Object.keys(ModeEnum).forEach(key => {
+        Object.values(ModeEnum).forEach(key => {
+            if (noEdit && key == ModeEnum.edit)
+                return
             startString += `\`${ModeEnum[key]}\` - ${key} mode\n`
         })
 
@@ -39,12 +42,22 @@ const start: Command = {
         } catch (error: unknown) {
             return message.reply(`Something went wrong, aborting.`)
         }
+
+        const isLegalMode = !!Object.keys(ModeEnum).find((value: string) => ((parseInt(value) == mode)))
+
+        if (!isLegalMode || (mode == ModeEnum.edit && noEdit))
+            return message.reply(`Invalid mode`)
+
         emulator.setSendMode(mode)
 
         message.channel.send(`Starting game in \`${Object.keys(ModeEnum).find((key) => ModeEnum[key] == mode)}\` mode.`)
 
         const channel = message.channel as Discord.TextChannel
-        const gameMessage = await channel.send(`Game starting...`)
+        const gameMessage = await channel.send({
+            embed: {
+                title: 'starting game soon'
+            }
+        })
 
         try {
             emulator.start(gameMessage, channel)
