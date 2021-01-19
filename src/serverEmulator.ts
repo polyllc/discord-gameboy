@@ -38,6 +38,7 @@ export default class ServerEmulator {
     private gifInterval?: NodeJS.Timeout
     private sendInterval?: NodeJS.Timeout
     private gifLength: number
+    private started: boolean
 
 
     constructor(server_id: Discord.Guild) {
@@ -64,6 +65,7 @@ export default class ServerEmulator {
             isSoundEnabled: false
         })
         this.gameboy.turnOff()
+        this.started = false
     }
 
     /**
@@ -79,6 +81,7 @@ export default class ServerEmulator {
 
         this.message = message
         this.channel = channel
+        this.started = true
 
         // hack to edit messages
         const editID = process.env.PRIVATE_HOST_CHANNEL
@@ -96,7 +99,7 @@ export default class ServerEmulator {
         this.gameboy.turnOn()
         this.gifInterval = setInterval(() => {
             this.encoder?.addFrame(this.canvasContext)
-        }, Math.floor(1000 / this.fps)) // 30 fps
+        }, Math.floor(30)) // 30 fps
         this.sendInterval = setInterval(() => {
             this.sendImage()
         }, this.gifLength)
@@ -179,8 +182,22 @@ export default class ServerEmulator {
         return encoder
     }
 
-    public getGameboy() {
-        return this.gameboy
+    public async onPress(key: string) {
+        const keys = ["right", "left", "up", "down", "a", "b", "select", "start"]
+        const keyPressed = keys.includes(key)
+        if (!keyPressed) return
+
+        this.gameboy.actionDown(key)
+        await new Promise(resolve => setTimeout(resolve, 200)) // wait 1/20 second
+        this.gameboy.actionUp(key)
+    }
+
+    public restart() {
+        this.gameboy.restart()
+    }
+
+    public isStarted() {
+        return this.started
     }
 
     public getCanvas() {
