@@ -16,8 +16,8 @@ const getNULLStream = () => {
 }
 
 export default class ServerEmulator {
-    private canvas: Canvas
-    private canvasContext: CanvasRenderingContext2D
+    private readonly canvas: Canvas
+    private readonly canvasContext: CanvasRenderingContext2D
     private gameboy: GameBoy
 
     private fps = 30
@@ -30,16 +30,15 @@ export default class ServerEmulator {
     private editChannel?: Discord.TextChannel
 
     // canvas
-    private width: number
-    private height: number
+    private readonly width: number
+    private readonly height: number
 
     // gif
     private encoder: GIFEncoder
     private gifInterval?: NodeJS.Timeout
     private sendInterval?: NodeJS.Timeout
-    private gifLength: number
     private started: boolean
-
+    private readonly gifLength: number
 
     constructor(server_id: Discord.Guild) {
         this.guild = server_id
@@ -71,42 +70,7 @@ export default class ServerEmulator {
     /**
      * Helper function to load ROM from path
     */
-    public loadROM(rom: ArrayBuffer) {
-        this.gameboy.replaceCartridge(rom)
-    }
-
-    public async start(message: Discord.Message, channel: Discord.TextChannel) {
-        if (!this.sendMode)
-            throw new Error('You need to set SendMode for the emulator')
-
-        this.message = message
-        this.channel = channel
-        this.started = true
-
-        // hack to edit messages
-        const editID = process.env.PRIVATE_HOST_CHANNEL
-        if (editID) {
-            this.editChannel = await this.message.client.channels.fetch(editID) as Discord.TextChannel
-            if (!this.editChannel)
-                console.warn(`Couldn't find private channel, editing mode is disabled.`)
-        }
-
-
-
-        if (!this.gameboy.cartridge)
-            throw new Error('ROM has to be loaded to start the emulator')
-
-        this.gameboy.turnOn()
-        this.gifInterval = setInterval(() => {
-            this.encoder?.addFrame(this.canvasContext)
-        }, Math.floor(30)) // 30 fps
-        this.sendInterval = setInterval(() => {
-            this.sendImage()
-        }, this.gifLength)
-
-    }
-
-    async sendImage() {
+    private async sendImage(): Promise<void> {
         if (!this.message || !this.channel) // sanity check
             throw new Error(`Must set message and channel.`)
 
@@ -154,7 +118,7 @@ export default class ServerEmulator {
     /**
      * creates the gif
      */
-    private async getImage() {
+    private async getImage(): Promise<null | Buffer> {
         if (!this.gameboy.isOn) return null
 
         // sleep for gif length
@@ -172,7 +136,42 @@ export default class ServerEmulator {
 
     }
 
-    private resetEncoder() {
+    public async start(message: Discord.Message, channel: Discord.TextChannel): Promise<void> {
+        if (!this.sendMode)
+            throw new Error('You need to set SendMode for the emulator')
+
+        this.message = message
+        this.channel = channel
+        this.started = true
+
+        // hack to edit messages
+        const editID = process.env.PRIVATE_HOST_CHANNEL
+        if (editID) {
+            this.editChannel = await this.message.client.channels.fetch(editID) as Discord.TextChannel
+            if (!this.editChannel)
+                console.warn(`Couldn't find private channel, editing mode is disabled.`)
+        }
+
+
+
+        if (!this.gameboy.cartridge)
+            throw new Error('ROM has to be loaded to start the emulator')
+
+        this.gameboy.turnOn()
+        this.gifInterval = setInterval(() => {
+            this.encoder?.addFrame(this.canvasContext)
+        }, Math.floor(30)) // 30 fps
+        this.sendInterval = setInterval(() => {
+            this.sendImage()
+        }, this.gifLength)
+
+    }
+
+    public loadROM(rom: ArrayBuffer): void {
+        this.gameboy.replaceCartridge(rom)
+    }
+
+    private resetEncoder(): GIFEncoder {
         const encoder = new GIFEncoder(this.width, this.height)
         encoder.setDelay(Math.floor(1000 / this.fps))
         encoder.setQuality(10)
@@ -192,30 +191,30 @@ export default class ServerEmulator {
         this.gameboy.actionUp(key)
     }
 
-    public restart() {
+    public restart(): void {
         this.gameboy.restart()
     }
 
-    public isStarted() {
+    public isStarted(): boolean {
         return this.started
     }
 
-    public getCanvas() {
+    public getCanvas(): Canvas {
         return this.canvas
     }
 
-    public destroy() {
+    public destroy(): void {
         if (this.gifInterval)
             clearInterval(this.gifInterval)
         if (this.sendInterval)
             clearInterval(this.sendInterval)
     }
 
-    public setSendMode(sendMode: ModeEnum) {
+    public setSendMode(sendMode: ModeEnum): void {
         this.sendMode = sendMode
     }
 
-    public getSendMode(sendMode: ModeEnum) {
+    public getSendMode(sendMode: ModeEnum): void {
         this.sendMode = sendMode
     }
 }
