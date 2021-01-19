@@ -13,7 +13,7 @@ const restart: Command = {
         if (!emulator)
             return message.reply(`You need to have a running emulator first.`)
 
-        emulator.getGameboy().restart()
+        emulator.restart()
 
         return message.channel.send(`Emulator restarted.`)
     }

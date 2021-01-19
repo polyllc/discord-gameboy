@@ -9,52 +9,6 @@ import * as fs from 'fs'
 
 import { ModeEnum, defaultCanvasHeight, defaultCanvasWidth, IMG_PATH, GAMES_PATH, SAVES_PATH } from './constants'
 
-
-async function sendImage(se, type = "gif") { //i know, i should be using an enum
-    let channel = se.mainmess.channel;
-    if (!se.makeGif && type == "gif") { //checks if its not already creating a gif, so it doesn't overlap
-        se.gif = new GIFEncoder(defaultCanvasWidth, defaultCanvasHeight);
-        se.gif.createReadStream().pipe(fs.createWriteStream('img/' + se.id + 'img.gif'));
-        se.gif.start();
-        se.gif.setRepeat(0);
-        se.gif.setDelay(0);
-        se.gif.setFrameRate(30);
-        se.makeGif = true;
-        setTimeout(async function () {
-            se.gif.finish();
-            if (se.frames != 0 && se.mainmess != null) {
-                se.makeGif = false;
-                if (se.mode == ModeEnum.delete) {
-                    se.mainmess.delete();
-                    se.mainmess = await channel.send({ files: [{ attachment: IMG_PATH + se.id + "img.gif" }] });
-                } else if (se.mode == ModeEnum.continuous) {
-                    se.mainmess = await channel.send({ files: [{ attachment: IMG_PATH + se.id + "img.gif" }] });
-                }
-                else { //edits
-                    let pid = await se.gid.send({ files: [{ attachment: IMG_PATH + se.id + "img.gif" }] });
-                    se.mainmess.edit(pid.attachments.first().url);
-                }
-            }
-            else {
-                console.log("Emulator didn't draw frames");
-            }
-        }, se.gifLen);
-    }
-    else if (type == "img") {
-        if (se.mode == ModeEnum.delete) {
-            se.mainmess.delete();
-            se.mainmess = await channel.send({ files: [{ attachment: IMG_PATH + se.id + "img.png" }] });
-        } else if (se.mode == ModeEnum.continuous) {
-            se.mainmess = await channel.send({ files: [{ attachment: IMG_PATH + se.id + "img.png" }] });
-        }
-        else {
-            var pid = await se.gid.send({ files: [{ attachment: IMG_PATH + se.id + "img.png" }] });
-            se.mainmess.edit(pid.attachments.first().url);
-        }
-    }
-}
-
-
 function saveSRAM(message, se) { //saves the sram to a file, currently, restoring the sram does not work, but it's not that important as save states do
     if (GameBoyEmulatorInitialized(se) && GameBoyEmulatorPlaying(se)) {
         fs.writeFile(SAVES_PATH + se.id + "sram_" + se.romname, JSON.stringify(se.gb.saveSRAMState()).substr(1, JSON.stringify(se.gb.saveSRAMState()).length - 2), function (err) {

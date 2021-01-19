@@ -8,8 +8,8 @@ import fs from 'fs'
 /**
  * Downloads and validates the rom
  */
-const getRom = async (file: Discord.MessageAttachment) => {    
-    if (!file.name?.endsWith('.gb'))
+const getRom = async (file: Discord.MessageAttachment) => {
+    if (!(file.name?.endsWith('.gb') || file.name?.endsWith('.gbc')))
         throw new Error('Invalid rom format.')
 
     if (file.size > Math.pow(10, 8)) // TODO actually figure out what size most roms are

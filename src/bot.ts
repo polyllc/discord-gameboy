@@ -1,10 +1,10 @@
 import * as Discord from 'discord.js'
-import { on_message } from './gameboyController'
+import { onMessage } from './onMessage'
 import { handleCommands } from './handleCommand';
 
 
 
-const bot = new Discord.Client();
+const bot = new Discord.Client()
 
 
 
@@ -13,8 +13,10 @@ bot.on('ready', () => {
 })
 
 bot.on('message', message => {
-    // TODO: add all commands, then make on message control gameplay and mentions
-    //on_message(message)
+    if (message.author.id == bot.user?.id || message.author.bot)
+        return
+
+    onMessage(message)
     handleCommands(message)
 })
 
