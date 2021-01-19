@@ -56,8 +56,7 @@ const load: Command = {
                 return message.reply(error.message)
             }
         } else {
-            const path : string = process.env.TEST_ROM_PATH!; //dirty
-
+            const path : string = process.env.TEST_ROM_PATH!;
             fs.readFile(path, function (error, data) {
                 if (error) {
                     throw error;
