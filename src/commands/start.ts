@@ -4,6 +4,17 @@ import { Command } from './command'
 import { ModeEnum } from '../constants'
 
 
+const getGameModePrompt = (canEdit: boolean): string => {
+
+    const prompt = `Start the game in\n\r
+        \`${ModeEnum.delete}\` - delete mode\n\r
+        \`${ModeEnum.continuous}\` - continuous mode\n\r
+        ${canEdit && `\`${ModeEnum.edit}\` - edit mode\n\r`}`
+
+    return prompt
+}
+
+
 const start: Command = {
     name: 'start',
     aliases: ['startemu', 'startrom', 's'],
@@ -14,19 +25,11 @@ const start: Command = {
         const emulator = ServerMap.getEmulator(message.guild!.id)
         if (!emulator)
             return message.reply(`You need to have a running emulator first.`)
+        const canEdit = !!process.env.PRIVATE_HOST_CHANNEL
 
-        const noEdit = !process.env.PRIVATE_HOST_CHANNEL
+        const prompt = getGameModePrompt(canEdit)
 
-        let startString = "Start the game in\n"
-        Object.values(ModeEnum).forEach(key => {
-            if (noEdit && key == ModeEnum.edit)
-                return
-            startString += `\`${ModeEnum[key]}\` - ${key} mode\n`
-        })
-
-
-
-        await message.channel.send(startString)
+        await message.channel.send(prompt)
 
         // filter to check if author of the mode message is the same start author
         const filter = (m: Discord.Message) => message.author.id === m.author.id
@@ -45,7 +48,7 @@ const start: Command = {
 
         const isLegalMode = !!Object.keys(ModeEnum).find((value: string) => ((parseInt(value) == mode)))
 
-        if (!isLegalMode || (mode == ModeEnum.edit && noEdit))
+        if (!isLegalMode || (mode == ModeEnum.edit && !canEdit))
             return message.reply(`Invalid mode`)
 
         emulator.setSendMode(mode)
