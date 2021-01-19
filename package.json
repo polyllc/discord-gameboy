@@ -4,7 +4,9 @@
   "description": "An emulator that uses discord as its method of input and output. It spits out frames to discord, and recieves input from discord.\r It supports:\r - Unique save states\r - Multiple emulators in one instance of a bot, one per user and one per guild\r - Custom ROMs\r - gifs\r - 3 modes of operation, community, hybrid, personal\r   - Community: Allows anyone to control the emulator with messages\r   - Hybrid: Allows anyone to control the emulator with messages, you can control with reactions\r   - Personal: Only you can control the emulator\r - Controlling through reactions or through messages",
   "main": "gameboy.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "nodemon"
   },
   "repository": {
     "type": "git",
@@ -17,11 +19,19 @@
   },
   "homepage": "https://github.com/paulohgodinho/discord-gameboy#readme",
   "dependencies": {
+    "axios": "^0.21.1",
     "canvas": "^2.6.1",
     "discord.js": "^12.5.1",
     "dotenv": "^8.2.0",
-    "gameboy": "git+https://github.com/paulohgodinho/gameboy.git",
     "gifencoder": "^2.0.1",
-    "request": "^2.88.2"
+    "jsgbc": "^0.5.8",
+    "typescript": "^4.1.3",
+    "web-audio-api": "^0.2.2"
+  },
+  "devDependencies": {
+    "@types/gifencoder": "^2.0.0",
+    "@types/node": "^14.14.20",
+    "nodemon": "^2.0.7",
+    "ts-node": "^9.1.1"
   }
 }
