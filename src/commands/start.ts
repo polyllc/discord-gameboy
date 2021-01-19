@@ -4,13 +4,15 @@ import { Command } from './command'
 import { ModeEnum } from '../constants'
 
 
-const getGameModePrompt = (canEdit: boolean): string => {
+const getGameModePrompt = (canEdit: boolean): Discord.MessageEmbed => {
+    const prompt = new Discord.MessageEmbed()
 
-    const prompt = `Start the game in\n\r
-        \`${ModeEnum.delete}\` - delete mode\n\r
-        \`${ModeEnum.continuous}\` - continuous mode\n\r
-        ${canEdit && `\`${ModeEnum.edit}\` - edit mode\n\r`}`
-
+    prompt.setTitle(`Start game in`)
+    prompt.addField(`${ModeEnum.delete} - delete mode`, `Delete the message when the next gif frame is ready.`)
+    prompt.addField(`${ModeEnum.continuous} - continuous mode`, `Do not Delete the message when the next gif frame is ready.`)
+    if (canEdit) {
+        prompt.addField(`${ModeEnum.edit} - edit mode`, `Edit the previous message to include the next frame.`)
+    }
     return prompt
 }
 
