@@ -50,7 +50,7 @@ const load: Command = {
             try {
                 romBinary = await getRom(rom)
                 emulator.loadROM(romBinary);
-                romName += rom.name;
+                romName = rom.name ?? "No rom name";
             } catch (e: unknown) {
                 const error = e as Error
                 return message.reply(error.message)
