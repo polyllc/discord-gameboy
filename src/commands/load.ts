@@ -44,14 +44,13 @@ const load: Command = {
         const guild = message.guild!
         const emulator = new ServerEmulator(guild)
         let romName : string = "";
-
         if (!loadTestRom){
             const rom = message.attachments.first()!
             let romBinary: ArrayBuffer
             try {
                 romBinary = await getRom(rom)
-                emulator.loadROM(romBinary)
-                romName += rom.name
+                emulator.loadROM(romBinary);
+                romName += rom.name;
             } catch (e: unknown) {
                 const error = e as Error
                 return message.reply(error.message)
@@ -61,9 +60,10 @@ const load: Command = {
 
             fs.readFile(path, function (error, data) {
                 if (error) {
-                    throw error
+                    throw error;
                 }
                 emulator.loadROM(data);
+                romName = "test rom";
             })
         }
 
