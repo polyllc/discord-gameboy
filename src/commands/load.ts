@@ -35,7 +35,7 @@ const load: Command = {
     description: 'Load a rom attached in the message.',
     optionalArgs: ['test'],
     execute: async (message: Discord.Message, args: string[]) => {
-        const loadTestRom: Boolean = !!process.env.DEBUG_MODE && args.includes('test');
+        const loadTestRom: Boolean = !!process.env.DEBUG_MODE && args.includes('test')
 
         if (!loadTestRom && message.attachments.size < 1) {
             return message.reply(`Please attach a rom of the game.`)
@@ -43,26 +43,26 @@ const load: Command = {
 
         const guild = message.guild!
         const emulator = new ServerEmulator(guild)
-        let romName : string = "";
+        let romName : string = ""
         if (!loadTestRom){
             const rom = message.attachments.first()!
             let romBinary: ArrayBuffer
             try {
                 romBinary = await getRom(rom)
-                emulator.loadROM(romBinary);
-                romName = rom.name ?? "No rom name";
+                emulator.loadROM(romBinary)
+                romName = rom.name ?? "No rom name"
             } catch (e: unknown) {
                 const error = e as Error
                 return message.reply(error.message)
             }
         } else {
-            const path : string = process.env.TEST_ROM_PATH!;
+            const path : string = process.env.TEST_ROM_PATH!
             fs.readFile(path, function (error, data) {
                 if (error) {
-                    throw error;
+                    throw error
                 }
-                emulator.loadROM(data);
-                romName = "test rom";
+                emulator.loadROM(data)
+                romName = "test rom"
             })
         }
 
