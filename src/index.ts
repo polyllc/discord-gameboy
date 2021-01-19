@@ -6,7 +6,6 @@ import bot from './bot'
 
 dotenv.config()
 
-
 const createCacheFolders = () => {
     const folders = [IMG_PATH, GAMES_PATH, SAVES_PATH]
     folders.forEach((path: string) => {

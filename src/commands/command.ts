@@ -8,5 +8,6 @@ export interface Command {
     args: string[],
     usage?: string,
     cooldown?: number,
+    optionalArgs?: string[],
     execute: (message: Discord.Message, args: string[]) => Promise<any>
 }

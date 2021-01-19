@@ -23,8 +23,12 @@ export const handleCommands = async (message: Discord.Message) => {
         return message.reply(`You must be in a guild to use this bot`)
 
 
-    if (command.args.length != args.length) {
-        let reply = `You didn't provide any arguments, ${message.author.username}!`
+    let mandatoryArgs = args.filter(e=>{
+        return !command.optionalArgs?.includes(e);
+    });
+    
+    if (command.args.length != mandatoryArgs.length) {
+        let reply = `Invalid amount of arguments, ${message.author.username}!`
 
         if (command.usage) {
             reply += `\nThe proper usage would be: \`${PREFIX}${command.name} ${command.usage}\``
