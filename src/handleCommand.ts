@@ -26,6 +26,7 @@ export const handleCommands = async (message: Discord.Message) => {
     let mandatoryArgs = args.filter(e=>{
         return !command.optionalArgs?.includes(e);
     });
+
     
     if (command.args.length != mandatoryArgs.length) {
         let reply = `Invalid amount of arguments, ${message.author.username}!`
