@@ -1,5 +1,5 @@
 import * as Discord from 'discord.js'
-import settingsMap from '../SettingsMap'
+import settingsMap from '../settingsMap'
 import { Command } from './command'
 const settings: Command = {
     name: 'settings',
@@ -20,9 +20,9 @@ const settings: Command = {
             }
             
             const value : string = args[2]
-            settingsMap[key] = value
+            settingsMap.set(key, value)
 
-            message.reply(`Set ${key} to ${value}`)
+            message.reply(`set ${key} to ${value}`)
         }
 
         if (mode == 'get'){

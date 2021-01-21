@@ -7,6 +7,7 @@ import { ModeEnum, defaultCanvasHeight, defaultCanvasWidth, defaultGIFLength, IM
 import { clearInterval, setInterval } from 'timers'
 import { AudioContext } from 'web-audio-api'
 import serverMap from './serverMap'
+import settingsMap from './settingsMap'
 
 
 const getNULLStream = () => {
@@ -175,7 +176,7 @@ export default class ServerEmulator {
         const encoder = new GIFEncoder(this.width, this.height)
         encoder.setDelay(Math.floor(1000 / this.fps))
         encoder.setQuality(10)
-        encoder.setRepeat(0)
+        encoder.setRepeat(settingsMap.get('loop_gifs') == 'true' ? 0 : 1)
         encoder.start()
 
         return encoder
