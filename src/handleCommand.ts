@@ -22,7 +22,7 @@ export const handleCommands = async (message: Discord.Message) => {
     if (!message.guild)
         return message.reply(`You must be in a guild to use this bot`)
 
-    
+    // If more, it could be optional arguments
     if (args.length < command.args.length) {
         let reply = `Not enough arguments, ${message.author.username}!`
 
@@ -32,7 +32,6 @@ export const handleCommands = async (message: Discord.Message) => {
 
         return message.reply(reply)
     }
-
 
     try {
         await command.execute(message, args)

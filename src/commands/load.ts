@@ -33,7 +33,6 @@ const load: Command = {
     aliases: ['load_rom', 'loadrom', 'lr'],
     args: [],
     description: 'Load a rom attached in the message.',
-    optionalArgs: ['test'],
     execute: async (message: Discord.Message, args: string[]) => {
         const loadTestRom: Boolean = !!process.env.DEBUG_MODE && args.includes('test')
 

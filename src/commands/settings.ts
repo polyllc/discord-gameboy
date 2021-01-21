@@ -5,9 +5,8 @@ import { Command } from './command'
 const settings: Command = {
     name: 'settings',
     aliases: ['sts'],
-    args: ['mode', 'key'],
+    args: ['mode'],
     description: 'Settings',
-    optionalArgs: ['*'],
     execute: async (message: Discord.Message, args: string[]) => {
         const mode : string = args[0]
         const key : string = args[1]
