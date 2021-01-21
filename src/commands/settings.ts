@@ -1,5 +1,4 @@
 import * as Discord from 'discord.js'
-import axios from 'axios'
 import settingsMap from '../SettingsMap'
 import { Command } from './command'
 const settings: Command = {
@@ -12,36 +11,36 @@ const settings: Command = {
         const key : string = args[1]
         if (mode == 'set'){
             if (!settingsMap.has(key)){
-                message.channel.send(`Unknown setting`)
+                message.reply(`unknown setting`)
                 return 
             }
             if (args.length != 3){
-                message.channel.send(`Please provide key and value`)
+                message.reply(`please provide key and value`)
                 return
             }
             
             const value : string = args[2]
             settingsMap[key] = value
 
-            message.channel.send(`${message.author.username} set ${key} to ${value}`)
+            message.reply(`Set ${key} to ${value}`)
         }
 
         if (mode == 'get'){
             if (!settingsMap.has(key)){
-                message.channel.send(`Unknown setting`)
+                message.reply(`unknown setting`)
                 return 
             }
 
             const value = settingsMap.get(key)
-            message.channel.send(`${message.author.username} ${key}: ${value}`)
+            message.reply(`${key}: ${value}`)
         }
 
         if (mode == 'list'){
             console.log( settingsMap.keys())
-            let msg : string = (Array.from(settingsMap.keys()).map(key=>{
+            let msg :string = 'all settings:\n' + Array.from(settingsMap.keys()).map(key=>{
                 return `${key}: ${settingsMap.get(key)}` 
-            })).join('\n')
-            message.channel.send(msg)
+            }).join('\n')
+            message.reply(msg)
         }
     }
 }
