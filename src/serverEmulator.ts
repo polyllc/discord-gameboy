@@ -153,8 +153,6 @@ export default class ServerEmulator {
                 console.warn(`Couldn't find private channel, editing mode is disabled.`)
         }
 
-
-
         if (!this.gameboy.cartridge)
             throw new Error('ROM has to be loaded to start the emulator')
 
@@ -174,9 +172,12 @@ export default class ServerEmulator {
 
     private resetEncoder(): GIFEncoder {
         const encoder = new GIFEncoder(this.width, this.height)
+        
+        const repeat : number = settingsMap.get(this.message?.channel.id ?? "", 'loop_gifs') == 'true' ? 0 : -1
+        
         encoder.setDelay(Math.floor(1000 / this.fps))
         encoder.setQuality(10)
-        encoder.setRepeat(settingsMap.get('loop_gifs') == 'true' ? 0 : 1)
+        encoder.setRepeat(repeat)
         encoder.start()
 
         return encoder

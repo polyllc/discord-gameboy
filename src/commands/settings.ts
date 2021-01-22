@@ -9,38 +9,39 @@ const settings: Command = {
     execute: async (message: Discord.Message, args: string[]) => {
         const mode : string = args[0]
         const key : string = args[1]
+        const guildId : string = message?.guild?.id ?? ""
+        
+        if (!guildId || !settingsMap.hasGuildSettings(guildId))
+            throw 'invalid guild ID'
+
         if (mode == 'set'){
-            if (!settingsMap.has(key)){
-                message.reply(`unknown setting`)
-                return 
-            }
             if (args.length != 3){
-                message.reply(`please provide key and value`)
+                message.reply(`please provide setting and value`)
                 return
             }
             
             const value : string = args[2]
-            settingsMap.set(key, value)
+            if (settingsMap.set(guildId, key, value)){
+                message.reply(`set ${key} to ${value}`)
+            } else {
+                message.reply('unknown setting')
+            }
+        } else if (mode == 'get'){
+            if (args.length != 2){
+                message.reply(`please provide setting`)
+                return
+            }
+        
+            const value = settingsMap.get(guildId, key)
 
-            message.reply(`set ${key} to ${value}`)
-        }
-
-        if (mode == 'get'){
-            if (!settingsMap.has(key)){
-                message.reply(`unknown setting`)
-                return 
+            if (!value){
+                message.reply('unknown setting')
+                return
             }
 
-            const value = settingsMap.get(key)
             message.reply(`${key}: ${value}`)
-        }
-
-        if (mode == 'list'){
-            console.log( settingsMap.keys())
-            let msg :string = 'all settings:\n' + Array.from(settingsMap.keys()).map(key=>{
-                return `${key}: ${settingsMap.get(key)}` 
-            }).join('\n')
-            message.reply(msg)
+        } else if (mode == 'list'){
+            message.reply(`all settings:\n${settingsMap.list(guildId)}`)
         }
     }
 }
