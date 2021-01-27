@@ -4,6 +4,7 @@ import Load from './load'
 import Stop from './stop'
 import Restart from './restart'
 import Start from './start'
+import Settings from './settings'
 
 /**
  * Loads all commands and return collection with all commands in compile time
@@ -13,7 +14,8 @@ const commandObjects = [
     Load,
     Stop,
     Restart,
-    Start
+    Start,
+    Settings
 ]
 
 export const commands = new Collection()

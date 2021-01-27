@@ -1,6 +1,5 @@
 import ServerEmulator from './serverEmulator'
 
-
 class ServerMap {
     private games: Map<string, ServerEmulator>
 
