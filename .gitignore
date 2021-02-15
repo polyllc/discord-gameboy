@@ -1,1 +1,7 @@
 ﻿node_modules
+.env
+games
+img
+saves
+build
+tsconfig.tsbuildinfo
