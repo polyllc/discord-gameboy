@@ -1,5 +1,5 @@
 # discord-gameboy
-  An emulator that uses discord as its method of input and output. It spits out frames to discord, and recieves input from discord.
+  An emulator that uses discord as its method of input and output. It spits out frames to discord, and receives input from discord.
 It supports:
 - Unique save states
 - Multiple emulators in one instance of a bot, one per user and one per guild
